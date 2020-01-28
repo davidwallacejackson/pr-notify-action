@@ -41,7 +41,7 @@ jobs:
       - run: |
           yarn install --production
           yarn build
-          yarn pack
+          yarn run pack
 
       - name: Commit changes
         uses: EndBug/add-and-commit@v2
