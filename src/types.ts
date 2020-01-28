@@ -1,14 +1,14 @@
 export type WebhookContext =
   | {
-      event: 'pull_request_review_comment'
+      eventName: 'pull_request_review_comment'
       payload: CommentPayload
     }
   | {
-      event: 'pull_request'
+      eventName: 'pull_request'
       payload: PullRequestPayload
     }
   | {
-      event: 'pull_request_review'
+      eventName: 'pull_request_review'
       payload: ReviewPayload
     }
 
@@ -29,7 +29,18 @@ export type ReviewPayload = {
   review: PullRequestReview
 }
 
-type PullRequest = {
+export type Message = {
+  githubUsername: string
+  body: string
+}
+
+export type SlackUser = {
+  id: string
+  name: string
+  real_name: string
+}
+
+export type PullRequest = {
   url: string
   html_url: string
   user: GitHubUser
@@ -37,20 +48,25 @@ type PullRequest = {
   requested_reviewers: GitHubUser[]
 }
 
-type PullRequestReview = {
+export type PullRequestReview = {
   body: string
   html_url: string
   state: 'APPROVED' | 'CHANGES_REQUESTED' | 'COMMENTED'
   user: GitHubUser
 }
 
-type GitHubUser = {
+export type GitHubUser = {
   login: string
 }
 
-type GitHubComment = {
+export type GitHubComment = {
   url: string
   html_url: string
   body: string
   user: GitHubUser
+}
+
+export type ActionInputs = {
+  users: {[githubUsername: string]: string}
+  slackToken: string
 }

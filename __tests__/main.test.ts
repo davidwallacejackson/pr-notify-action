@@ -1,27 +1,66 @@
-import {wait} from '../src/wait'
-import * as process from 'process'
-import * as cp from 'child_process'
-import * as path from 'path'
+import sinon from 'sinon'
 
-test('throws invalid number', async () => {
-  const input = parseInt('foo', 10)
-  await expect(wait(input)).rejects.toThrow('milliseconds not a number')
+const users: {[name: string]: GitHubUser} = {
+  foo: {login: 'foo'},
+  bar: {login: 'bar'},
+  baz: {login: 'baz'}
+}
+
+const fakePR: PullRequest = {
+  url: '',
+  html_url: 'github.com/repo/pulls/1234',
+  user: users.foo,
+  title: 'Fake PR',
+  requested_reviewers: [users.bar, users.baz]
+}
+
+const sendMessagesFake = sinon.fake.returns(Promise.resolve(null))
+jest.mock('../src/slack', () => ({
+  __esModule: true,
+  default: sendMessagesFake
+}))
+
+jest.mock('../src/inputs', () => ({
+  __esModule: true,
+  default: () =>
+    Promise.resolve({
+      users: {
+        foo: 'foo@email.com',
+        bar: 'bar@email.com',
+        baz: 'baz@email.com'
+      },
+      slackToken: 'SLACK_TOKEN'
+    })
+}))
+
+import {assert} from 'chai'
+
+import {PullRequest, GitHubUser, Message, WebhookContext} from '../src/types'
+import handleEvent from '../src/handleEvent'
+
+beforeEach(() => {
+  sendMessagesFake.resetHistory()
 })
 
-test('wait 500 ms', async () => {
-  const start = new Date()
-  await wait(500)
-  const end = new Date()
-  var delta = Math.abs(end.getTime() - start.getTime())
-  expect(delta).toBeGreaterThan(450)
-})
+test('sends messages when a PR is created', async () => {
+  const context = {
+    eventName: 'pull_request',
+    payload: {
+      action: 'created',
+      pull_request: fakePR
+    }
+  } as WebhookContext
 
-// shows how the runner will run a javascript action with env / stdout protocol
-test('test runs', () => {
-  process.env['INPUT_MILLISECONDS'] = '500'
-  const ip = path.join(__dirname, '..', 'lib', 'main.js')
-  const options: cp.ExecSyncOptions = {
-    env: process.env
-  }
-  console.log(cp.execSync(`node ${ip}`, options).toString())
+  await handleEvent(context)
+
+  assert.ok(sendMessagesFake.calledOnce)
+
+  const messages: Message[] = sendMessagesFake.args[0][0]
+  console.log(messages)
+
+  assert.strictEqual(messages[0].githubUsername, 'bar')
+  assert.include(messages[0].body, 'foo has requested your review')
+
+  assert.strictEqual(messages[1].githubUsername, 'baz')
+  assert.include(messages[1].body, 'foo has requested your review')
 })

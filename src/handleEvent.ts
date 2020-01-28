@@ -1,47 +1,29 @@
-import * as core from '@actions/core'
-import {wait} from './wait'
-import {Toolkit} from 'actions-toolkit'
 import {
   WebhookContext,
   PullRequestPayload,
   ReviewPayload,
-  CommentPayload
+  CommentPayload,
+  Message
 } from './types'
+import sendMessages from './slack'
 
-async function run(): Promise<void> {
-  try {
-    const tools = new Toolkit()
+export default async function handleEvent(
+  context: WebhookContext
+): Promise<void> {
+  let messages: Message[] = []
 
-    const context = (tools.context as unknown) as WebhookContext
-    let messages: Message[] = []
-
-    switch (context.event) {
-      case 'pull_request':
-        messages = await handlePREvent(context.payload)
-        break
-      case 'pull_request_review':
-        messages = await handleReviewEvent(context.payload)
-        break
-      case 'pull_request_review_comment':
-        messages = await handleCommentEvent(context.payload)
-    }
-
-    const ms: string = core.getInput('milliseconds')
-    core.debug(`Waiting ${ms} milliseconds ...`)
-
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
-
-    core.setOutput('time', new Date().toTimeString())
-  } catch (error) {
-    core.setFailed(error.message)
+  switch (context.eventName) {
+    case 'pull_request':
+      messages = await handlePREvent(context.payload)
+      break
+    case 'pull_request_review':
+      messages = await handleReviewEvent(context.payload)
+      break
+    case 'pull_request_review_comment':
+      messages = await handleCommentEvent(context.payload)
   }
-}
 
-type Message = {
-  githubUsername: string
-  body: string
+  await sendMessages(messages)
 }
 
 async function handlePREvent(payload: PullRequestPayload): Promise<Message[]> {
@@ -103,5 +85,3 @@ async function handleCommentEvent(payload: CommentPayload): Promise<Message[]> {
     body: `${commentAuthor.login} commented on ${payload.pull_request.title}: ${payload.comment.body}`
   }))
 }
-
-run()

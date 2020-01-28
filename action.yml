@@ -4,7 +4,7 @@ author: 'davidwallacejackson'
 inputs:
   users:
     description: 'mapping of Github usernames to slack emails'
-    default: '{}'
+    default: '{"foo": "foo@email.com", "bar": "bar@email.com", "baz": "baz@email.com"}'
     required: true
 runs:
   using: 'node12'
