@@ -1,10 +1,11 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'pr-notify'
+description: 'push PR notifications to slack'
+author: 'davidwallacejackson'
 inputs:
-  myInput:              # change this
-    description: 'input description here'
-    default: 'default value if applicable'
+  users:
+    description: 'mapping of Github usernames to slack emails'
+    default: '{}'
+    required: true
 runs:
   using: 'node12'
   main: 'dist/index.js'
