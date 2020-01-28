@@ -46,7 +46,7 @@ test('sends messages when a PR is created', async () => {
   const context = {
     eventName: 'pull_request',
     payload: {
-      action: 'created',
+      action: 'review_requested',
       pull_request: fakePR
     }
   } as WebhookContext
