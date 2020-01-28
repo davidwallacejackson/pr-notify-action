@@ -39,7 +39,7 @@ jobs:
           git fetch
           git merge origin/master --allow-unrelated-histories
       - run: |
-          yarn install --production
+          yarn install
           yarn build
           yarn run pack
 
