@@ -34,13 +34,15 @@ jobs:
             ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
 
       - run: |
-          yarn install --production
-          yarn build
-      - run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git fetch
           git merge origin/master --allow-unrelated-histories
+      - run: |
+          yarn install --production
+          yarn build
+          yarn pack
+
       - name: Commit changes
         uses: EndBug/add-and-commit@v2
         with:
