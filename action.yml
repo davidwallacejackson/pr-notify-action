@@ -1,11 +1,11 @@
-name: 'pr-notify'
-description: 'push PR notifications to slack'
-author: 'davidwallacejackson'
+name: "pr-notify"
+description: "push PR notifications to slack"
+author: "davidwallacejackson"
 inputs:
   users:
-    description: 'mapping of Github usernames to slack emails'
+    description: "mapping of Github usernames to slack emails"
     default: '{"foo": "foo@email.com", "bar": "bar@email.com", "baz": "baz@email.com"}'
     required: true
 runs:
-  using: 'node12'
-  main: 'dist/index.js'
+  using: "node12"
+  main: "lib/index.js"
