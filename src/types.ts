@@ -11,6 +11,10 @@ export type WebhookContext =
       eventName: 'pull_request_review'
       payload: ReviewPayload
     }
+  | {
+      eventName: string
+      payload: any
+    }
 
 export type CommentPayload = {
   action: 'created' | string

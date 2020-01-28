@@ -42,25 +42,171 @@ beforeEach(() => {
   sendMessagesFake.resetHistory()
 })
 
-test('sends messages when a PR is created', async () => {
-  const context = {
+test('sends messages when a review is requested', async () => {
+  await handleEvent({
     eventName: 'pull_request',
     payload: {
       action: 'review_requested',
       pull_request: fakePR
     }
-  } as WebhookContext
+  })
 
-  await handleEvent(context)
-
-  assert.ok(sendMessagesFake.calledOnce)
+  assert.isTrue(sendMessagesFake.calledOnce)
 
   const messages: Message[] = sendMessagesFake.args[0][0]
-  console.log(messages)
 
   assert.strictEqual(messages[0].githubUsername, 'bar')
-  assert.include(messages[0].body, 'foo has requested your review')
+  assert.include(messages[0].body, 'foo requested your review')
 
   assert.strictEqual(messages[1].githubUsername, 'baz')
-  assert.include(messages[1].body, 'foo has requested your review')
+  assert.include(messages[1].body, 'foo requested your review')
+})
+
+test('sends messages when a PR is approved', async () => {
+  await handleEvent({
+    eventName: 'pull_request_review',
+    payload: {
+      action: 'submitted',
+      pull_request: fakePR,
+      review: {
+        body: 'Looks good.',
+        url: '',
+        html_url: 'http://github.com/repo/pulls/1/some-review',
+        state: 'APPROVED',
+        user: users.bar
+      }
+    }
+  })
+
+  assert.isTrue(sendMessagesFake.calledOnce)
+
+  const messages: Message[] = sendMessagesFake.args[0][0]
+
+  assert.strictEqual(messages.length, 1)
+  assert.strictEqual(messages[0].githubUsername, 'foo')
+  assert.include(messages[0].body, 'bar approved')
+})
+
+test('sends messages when changes are requested', async () => {
+  await handleEvent({
+    eventName: 'pull_request_review',
+    payload: {
+      action: 'submitted',
+      pull_request: fakePR,
+      review: {
+        body: 'Looks good.',
+        url: '',
+        html_url: 'http://github.com/repo/pulls/1/some-review',
+        state: 'CHANGES_REQUESTED',
+        user: users.bar
+      }
+    }
+  })
+
+  assert.isTrue(sendMessagesFake.calledOnce)
+
+  const messages: Message[] = sendMessagesFake.args[0][0]
+
+  assert.strictEqual(messages.length, 1)
+  assert.strictEqual(messages[0].githubUsername, 'foo')
+  assert.include(messages[0].body, 'bar requested changes')
+})
+
+test('sends messages when a review with comment is left', async () => {
+  await handleEvent({
+    eventName: 'pull_request_review',
+    payload: {
+      action: 'submitted',
+      pull_request: fakePR,
+      review: {
+        body: 'Looks good.',
+        url: '',
+        html_url: 'http://github.com/repo/pulls/1/some-review',
+        state: 'COMMENTED',
+        user: users.bar
+      }
+    }
+  })
+
+  assert.isTrue(sendMessagesFake.calledOnce)
+
+  const messages: Message[] = sendMessagesFake.args[0][0]
+
+  assert.strictEqual(messages.length, 1)
+  assert.strictEqual(messages[0].githubUsername, 'foo')
+  assert.include(messages[0].body, 'bar commented on')
+})
+
+test('sends messages when a comment is left on a PR', async () => {
+  await handleEvent({
+    eventName: 'pull_request_review_comment',
+    payload: {
+      action: 'created',
+      pull_request: fakePR,
+      comment: {
+        url: '',
+        html_url: 'http://github.com/repo/pulls/1/comments/1',
+        body: 'Hmm.',
+        user: users.baz
+      }
+    }
+  })
+
+  assert.isTrue(sendMessagesFake.calledOnce)
+
+  const messages: Message[] = sendMessagesFake.args[0][0]
+
+  assert.strictEqual(messages.length, 2)
+  assert.strictEqual(messages[0].githubUsername, 'foo')
+  assert.strictEqual(messages[1].githubUsername, 'bar')
+  assert.include(messages[0].body, 'baz commented on')
+  assert.include(messages[0].body, 'Hmm.')
+})
+
+test("ignores events that it's not supposed to handle", async () => {
+  await handleEvent({
+    eventName: 'pull_request',
+    payload: {
+      action: 'created',
+      pull_request: fakePR
+    }
+  })
+  assert.isTrue(sendMessagesFake.notCalled)
+
+  await handleEvent({
+    eventName: 'pull_request_review',
+    payload: {
+      action: 'edited',
+      pull_request: fakePR,
+      review: {
+        body: 'Looks good.',
+        url: '',
+        html_url: 'http://github.com/repo/pulls/1/some-review',
+        state: 'APPROVED',
+        user: users.bar
+      }
+    }
+  })
+  assert.isTrue(sendMessagesFake.notCalled)
+
+  await handleEvent({
+    eventName: 'pull_request_review_comment',
+    payload: {
+      action: 'edited',
+      pull_request: fakePR,
+      comment: {
+        url: '',
+        html_url: 'http://github.com/repo/pulls/1/comments/1',
+        body: 'Hmm.',
+        user: users.baz
+      }
+    }
+  })
+  assert.isTrue(sendMessagesFake.notCalled)
+
+  await handleEvent({
+    eventName: 'other_event',
+    payload: {}
+  })
+  assert.isTrue(sendMessagesFake.notCalled)
 })

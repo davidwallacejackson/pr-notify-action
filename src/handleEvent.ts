@@ -23,7 +23,9 @@ export default async function handleEvent(
       messages = await handleCommentEvent(context.payload)
   }
 
-  await sendMessages(messages)
+  if (messages.length > 0) {
+    await sendMessages(messages)
+  }
 }
 
 async function handlePREvent(payload: PullRequestPayload): Promise<Message[]> {
@@ -35,7 +37,7 @@ async function handlePREvent(payload: PullRequestPayload): Promise<Message[]> {
 
   return payload.pull_request.requested_reviewers.map(user => ({
     githubUsername: user.login,
-    body: `${prAuthor.login} has requested your review on a PR: ${payload.pull_request.title}`
+    body: `${prAuthor.login} requested your review on a PR: ${payload.pull_request.title}`
   }))
 }
 
@@ -61,7 +63,7 @@ async function handleReviewEvent(payload: ReviewPayload): Promise<Message[]> {
   return [
     {
       githubUsername: prAuthor.login,
-      body: `${payload.review.user.login} has ${actionText} your PR: ${payload.pull_request.title}`
+      body: `${payload.review.user.login} ${actionText} your PR: ${payload.pull_request.title}`
     }
   ]
 }
