@@ -1,3 +1,4 @@
+import * as core from '@actions/core'
 import {
   WebhookContext,
   PullRequestPayload,
@@ -10,7 +11,7 @@ import sendMessages from './slack'
 export default async function handleEvent(
   context: WebhookContext
 ): Promise<void> {
-  console.log('handling event: ', context)
+  core.debug('handling event: ' + JSON.stringify(context))
   let messages: Message[] = []
 
   switch (context.eventName) {
@@ -25,13 +26,13 @@ export default async function handleEvent(
   }
 
   if (messages.length > 0) {
-    console.log('sending messages', messages)
+    core.debug('sending messages' + JSON.stringify(messages))
     await sendMessages(messages)
   }
 }
 
 async function handlePREvent(payload: PullRequestPayload): Promise<Message[]> {
-  console.log('handling PR')
+  core.debug('handling PR')
   if (payload.action !== 'review_requested') {
     return []
   }
@@ -45,7 +46,7 @@ async function handlePREvent(payload: PullRequestPayload): Promise<Message[]> {
 }
 
 async function handleReviewEvent(payload: ReviewPayload): Promise<Message[]> {
-  console.log('handling review')
+  core.debug('handling review')
   if (payload.action !== 'submitted') {
     return []
   }
@@ -73,7 +74,7 @@ async function handleReviewEvent(payload: ReviewPayload): Promise<Message[]> {
 }
 
 async function handleCommentEvent(payload: CommentPayload): Promise<Message[]> {
-  console.log('handling comment')
+  core.debug('handling comment')
   if (payload.action !== 'created') {
     return []
   }
