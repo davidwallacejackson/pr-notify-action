@@ -11,7 +11,7 @@ const fakePR: PullRequest = {
   html_url: 'github.com/repo/pulls/1234',
   user: users.foo,
   title: 'Fake PR',
-  requested_reviewers: [users.bar, users.baz]
+  assignees: [users.bar, users.baz]
 }
 
 const sendMessagesFake = sinon.fake.returns(Promise.resolve(null))
@@ -42,11 +42,11 @@ beforeEach(() => {
   sendMessagesFake.resetHistory()
 })
 
-test('sends messages when a review is requested', async () => {
+test('sends messages when a review is assigned', async () => {
   await handleEvent({
     eventName: 'pull_request',
     payload: {
-      action: 'review_requested',
+      action: 'assigned',
       pull_request: fakePR
     }
   })

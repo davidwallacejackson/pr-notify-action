@@ -3,10 +3,10 @@ import * as core from '@actions/core'
 import {WebClient} from '@slack/web-api'
 
 import {Message, SlackUser} from './types'
-import getInputs from './inputs'
+import getConfig from './config'
 
 export default async function sendMessages(messages: Message[]): Promise<void> {
-  const {users, slackToken} = await getInputs()
+  const {users, slackToken} = await getConfig()
   const web = new WebClient(slackToken)
 
   const sends = messages.map(async message => {

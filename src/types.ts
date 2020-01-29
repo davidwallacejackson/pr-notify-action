@@ -49,7 +49,7 @@ export type PullRequest = {
   html_url: string
   user: GitHubUser
   title: string
-  requested_reviewers: GitHubUser[]
+  assignees: GitHubUser[]
 }
 
 export type PullRequestReview = {

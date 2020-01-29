@@ -1,15 +1,17 @@
-import * as core from '@actions/core'
-import * as github from '@actions/github'
 import handleEvent from './handleEvent'
-import {WebhookContext} from './types'
+import {Request, Response} from 'express'
 
-export default async function run(): Promise<void> {
+export async function handle(req: Request, res: Response): Promise<void> {
   try {
-    core.debug(`event received: ${github.context.eventName}`)
-    core.debug(JSON.stringify(github.context))
-    await handleEvent((github.context as unknown) as WebhookContext)
-    return
+    const json = req.body
+    const eventName = req.headers['x-github-event'] as string
+    const context = {
+      eventName,
+      payload: json
+    }
+    await handleEvent(context)
+    res.send('ok')
   } catch (error) {
-    core.setFailed(error.message)
+    res.status(500).send('not ok')
   }
 }

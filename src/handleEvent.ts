@@ -11,7 +11,8 @@ import sendMessages from './slack'
 export default async function handleEvent(
   context: WebhookContext
 ): Promise<void> {
-  core.debug('handling event: ' + JSON.stringify(context))
+  console.log('handling event: ', context.eventName)
+  console.debug(context)
   let messages: Message[] = []
 
   switch (context.eventName) {
@@ -26,27 +27,27 @@ export default async function handleEvent(
   }
 
   if (messages.length > 0) {
-    core.debug('sending messages' + JSON.stringify(messages))
+    console.log('sending messages', messages)
     await sendMessages(messages)
   }
 }
 
 async function handlePREvent(payload: PullRequestPayload): Promise<Message[]> {
-  core.debug('handling PR')
-  if (payload.action !== 'review_requested') {
+  console.log('handling PR')
+  if (payload.action !== 'assigned') {
     return []
   }
 
   const prAuthor = payload.pull_request.user
 
-  return payload.pull_request.requested_reviewers.map(user => ({
+  return payload.pull_request.assignees.map(user => ({
     githubUsername: user.login,
     body: `${prAuthor.login} requested your review on a PR: ${payload.pull_request.title}`
   }))
 }
 
 async function handleReviewEvent(payload: ReviewPayload): Promise<Message[]> {
-  core.debug('handling review')
+  console.log('handling review')
   if (payload.action !== 'submitted') {
     return []
   }
@@ -74,7 +75,7 @@ async function handleReviewEvent(payload: ReviewPayload): Promise<Message[]> {
 }
 
 async function handleCommentEvent(payload: CommentPayload): Promise<Message[]> {
-  core.debug('handling comment')
+  console.log('handling comment')
   if (payload.action !== 'created') {
     return []
   }
@@ -83,10 +84,9 @@ async function handleCommentEvent(payload: CommentPayload): Promise<Message[]> {
   // (but NOT to whomever wrote the comment)
   const prAuthor = payload.pull_request.user
   const commentAuthor = payload.comment.user
-  const recipients = [
-    prAuthor,
-    ...payload.pull_request.requested_reviewers
-  ].filter(user => user.login !== commentAuthor.login)
+  const recipients = [prAuthor, ...payload.pull_request.assignees].filter(
+    user => user.login !== commentAuthor.login
+  )
 
   return recipients.map(user => ({
     githubUsername: user.login,
