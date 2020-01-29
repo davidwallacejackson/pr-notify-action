@@ -5,7 +5,7 @@
   "description": "TypeScript template action",
   "main": "dist/index.js",
   "scripts": {
-    "start": "tsc && functions-framework --target=handle",
+    "start": "yarn build && functions-framework --target=handle",
     "build": "ncc build src/index.ts -o dist",
     "zip": "cd ./dist && zip ../dist.zip index.js",
     "format": "prettier --write **/*.ts",

@@ -99,3 +99,4 @@ __tests__/runner/*
 lib/**/*
 lib/
 dist.zip
+dist/index.js

@@ -29,7 +29,8 @@ jest.mock('../src/config', () => ({
         bar: 'bar@email.com',
         baz: 'baz@email.com'
       },
-      slackToken: 'SLACK_TOKEN'
+      slackToken: 'SLACK_TOKEN',
+      secret: 'secret'
     })
 }))
 

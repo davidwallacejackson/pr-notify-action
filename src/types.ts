@@ -70,7 +70,8 @@ export type GitHubComment = {
   user: GitHubUser
 }
 
-export type ActionInputs = {
+export type Config = {
   users: {[githubUsername: string]: string}
   slackToken: string
+  secret: string
 }
