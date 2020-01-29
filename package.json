@@ -6,10 +6,11 @@
   "main": "dist/index.js",
   "scripts": {
     "start": "tsc && functions-framework --target=handle",
-    "build": "tsc",
+    "build": "ncc build src/index.ts -o dist",
+    "zip": "cd ./dist && zip ../dist.zip index.js",
     "format": "prettier --write **/*.ts",
     "format-check": "prettier --check **/*.ts",
-    "pack": "rm -f dist/index.js dist.zip && ncc build src/index.ts -o dist && cd ./dist && zip ../dist.zip index.js",
+    "bundle": "rm -f dist/index.js dist.zip && yarn run build && yarn run zip",
     "test": "jest"
   },
   "repository": {
