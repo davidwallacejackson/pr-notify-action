@@ -10,7 +10,7 @@ jobs:
   test: # make sure build/ci work properly
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - run: |
           yarn
           yarn build
@@ -44,7 +44,7 @@ jobs:
           yarn run pack
 
       - name: Commit changes
-        uses: EndBug/add-and-commit@v2
+        uses: EndBug/add-and-commit@v3
         with:
           author_name: "GitHub Action"
           author_email: action@github.com
