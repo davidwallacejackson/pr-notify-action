@@ -1,0 +1,12 @@
+name: Slack Notify
+
+on: [pull_request, pull_request_review, pull_request_review_comment]
+
+jobs:
+  slack-notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: davidwallacejackson/pr-notify-action@releases
+        with:
+          users: '{"davidwallacejackson": "david@wandb.com"}'
+          slackToken: "${{secrets.SLACK_TOKEN}}"
