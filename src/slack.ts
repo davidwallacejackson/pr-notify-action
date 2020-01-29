@@ -1,5 +1,3 @@
-import * as core from '@actions/core'
-
 import {WebClient} from '@slack/web-api'
 
 import {Message, SlackUser} from './types'
@@ -24,7 +22,8 @@ export default async function sendMessages(messages: Message[]): Promise<void> {
 
     return await web.chat.postMessage({
       channel: slackUser.id,
-      text: message.body
+      text: message.body,
+      mrkdwn: true
     })
   })
 

@@ -84,7 +84,10 @@ test('sends messages when a PR is approved', async () => {
 
   assert.strictEqual(messages.length, 1)
   assert.strictEqual(messages[0].githubUsername, 'foo')
-  assert.include(messages[0].body, 'bar approved')
+  assert.include(
+    messages[0].body,
+    'bar <http://github.com/repo/pulls/1/some-review|approved>'
+  )
 })
 
 test('sends messages when changes are requested', async () => {
@@ -109,7 +112,10 @@ test('sends messages when changes are requested', async () => {
 
   assert.strictEqual(messages.length, 1)
   assert.strictEqual(messages[0].githubUsername, 'foo')
-  assert.include(messages[0].body, 'bar requested changes')
+  assert.include(
+    messages[0].body,
+    'bar <http://github.com/repo/pulls/1/some-review|requested changes to>'
+  )
 })
 
 test('sends messages when a review with comment is left', async () => {
@@ -134,7 +140,10 @@ test('sends messages when a review with comment is left', async () => {
 
   assert.strictEqual(messages.length, 1)
   assert.strictEqual(messages[0].githubUsername, 'foo')
-  assert.include(messages[0].body, 'bar commented on')
+  assert.include(
+    messages[0].body,
+    'bar <http://github.com/repo/pulls/1/some-review|commented on>'
+  )
 })
 
 test('sends messages when a comment is left on a PR', async () => {
@@ -159,7 +168,10 @@ test('sends messages when a comment is left on a PR', async () => {
   assert.strictEqual(messages.length, 2)
   assert.strictEqual(messages[0].githubUsername, 'foo')
   assert.strictEqual(messages[1].githubUsername, 'bar')
-  assert.include(messages[0].body, 'baz commented on')
+  assert.include(
+    messages[0].body,
+    'baz <http://github.com/repo/pulls/1/comments/1|commented on>'
+  )
   assert.include(messages[0].body, 'Hmm.')
 })
 

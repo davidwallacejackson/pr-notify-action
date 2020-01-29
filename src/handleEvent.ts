@@ -8,11 +8,13 @@ import {
 } from './types'
 import sendMessages from './slack'
 
+const link = (url: string, text: string) => `<${url}|${text}>`
+
 export default async function handleEvent(
   context: WebhookContext
 ): Promise<void> {
   console.log('handling event: ', context.eventName)
-  console.debug(context)
+  console.log(context)
   let messages: Message[] = []
 
   switch (context.eventName) {
@@ -38,11 +40,14 @@ async function handlePREvent(payload: PullRequestPayload): Promise<Message[]> {
     return []
   }
 
-  const prAuthor = payload.pull_request.user
+  const pr = payload.pull_request
 
   return payload.pull_request.assignees.map(user => ({
     githubUsername: user.login,
-    body: `${prAuthor.login} requested your review on a PR: ${payload.pull_request.title}`
+    body: `${pr.user.login} requested your review on a PR: ${link(
+      pr.html_url,
+      pr.title
+    )}`
   }))
 }
 
@@ -52,7 +57,8 @@ async function handleReviewEvent(payload: ReviewPayload): Promise<Message[]> {
     return []
   }
 
-  const prAuthor = payload.pull_request.user
+  const pr = payload.pull_request
+  const review = payload.review
   let actionText: string
 
   switch (payload.review.state) {
@@ -68,8 +74,11 @@ async function handleReviewEvent(payload: ReviewPayload): Promise<Message[]> {
 
   return [
     {
-      githubUsername: prAuthor.login,
-      body: `${payload.review.user.login} ${actionText} your PR: ${payload.pull_request.title}`
+      githubUsername: pr.user.login,
+      body: `${review.user.login} ${link(
+        review.html_url,
+        actionText
+      )} your PR: ${link(pr.html_url, pr.title)}`
     }
   ]
 }
@@ -82,14 +91,17 @@ async function handleCommentEvent(payload: CommentPayload): Promise<Message[]> {
 
   // send the message to all requested reviewers, plus the PR author
   // (but NOT to whomever wrote the comment)
-  const prAuthor = payload.pull_request.user
-  const commentAuthor = payload.comment.user
-  const recipients = [prAuthor, ...payload.pull_request.assignees].filter(
-    user => user.login !== commentAuthor.login
+  const pr = payload.pull_request
+  const comment = payload.comment
+  const recipients = [pr.user, ...payload.pull_request.assignees].filter(
+    user => user.login !== comment.user.login
   )
 
   return recipients.map(user => ({
     githubUsername: user.login,
-    body: `${commentAuthor.login} commented on ${payload.pull_request.title}: ${payload.comment.body}`
+    body: `${comment.user.login} ${link(
+      comment.html_url,
+      'commented on'
+    )} ${link(pr.html_url, pr.title)}: ${payload.comment.body}`
   }))
 }
