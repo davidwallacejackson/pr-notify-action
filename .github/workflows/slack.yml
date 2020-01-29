@@ -8,5 +8,5 @@ jobs:
     steps:
       - uses: davidwallacejackson/pr-notify-action@releases
         with:
-          users: "${{secretes.USERS}}"
+          users: "${{secrets.USERS}}"
           slackToken: "${{secrets.SLACK_TOKEN}}"
