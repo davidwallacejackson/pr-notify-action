@@ -20,7 +20,7 @@ jest.mock('../src/slack', () => ({
   default: sendMessagesFake
 }))
 
-jest.mock('../src/inputs', () => ({
+jest.mock('../src/config', () => ({
   __esModule: true,
   default: () =>
     Promise.resolve({
