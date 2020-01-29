@@ -6,6 +6,9 @@ inputs:
     description: "mapping of Github usernames to slack emails"
     default: '{"foo": "foo@email.com", "bar": "bar@email.com", "baz": "baz@email.com"}'
     required: true
+  slackToken:
+    description: "slack token"
+    required: true
 runs:
   using: "node12"
   main: "dist/index.js"
