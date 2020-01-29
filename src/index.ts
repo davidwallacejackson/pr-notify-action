@@ -6,6 +6,7 @@ import {WebhookContext} from './types'
 export default async function run(): Promise<void> {
   try {
     core.debug(`event received: ${github.context.eventName}`)
+    core.debug(JSON.stringify(github.context))
     await handleEvent((github.context as unknown) as WebhookContext)
     return
   } catch (error) {
