@@ -73,7 +73,7 @@ test('sends messages when a PR is approved', async () => {
         body: 'Looks good.',
         url: '',
         html_url: 'http://github.com/repo/pulls/1/some-review',
-        state: 'APPROVED',
+        state: 'approved',
         user: users.bar
       }
     }
@@ -101,7 +101,7 @@ test('sends messages when changes are requested', async () => {
         body: 'Looks good.',
         url: '',
         html_url: 'http://github.com/repo/pulls/1/some-review',
-        state: 'CHANGES_REQUESTED',
+        state: 'changes_requested',
         user: users.bar
       }
     }
@@ -129,7 +129,7 @@ test('sends messages when a review with comment is left', async () => {
         body: 'Looks good.',
         url: '',
         html_url: 'http://github.com/repo/pulls/1/some-review',
-        state: 'COMMENTED',
+        state: 'commented',
         user: users.bar
       }
     }

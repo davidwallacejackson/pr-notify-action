@@ -63,13 +63,13 @@ async function handleReviewEvent(payload: ReviewPayload): Promise<Message[]> {
   let actionText: string
 
   switch (payload.review.state) {
-    case 'APPROVED':
+    case 'approved':
       actionText = 'approved'
       break
-    case 'CHANGES_REQUESTED':
+    case 'changes_requested':
       actionText = 'requested changes to'
       break
-    case 'COMMENTED':
+    case 'commented':
       actionText = 'commented on'
   }
 

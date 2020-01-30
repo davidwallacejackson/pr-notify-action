@@ -55,7 +55,7 @@ export type PullRequest = {
 export type PullRequestReview = {
   body: string
   html_url: string
-  state: 'APPROVED' | 'CHANGES_REQUESTED' | 'COMMENTED'
+  state: 'approved' | 'changes_requested' | 'commented'
   user: GitHubUser
 }
 
