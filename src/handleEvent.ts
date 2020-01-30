@@ -29,7 +29,8 @@ export default async function handleEvent(
   }
 
   if (messages.length > 0) {
-    console.log('sending messages', messages)
+    console.log('sending messages')
+    console.log(JSON.stringify(messages))
     await sendMessages(messages)
   }
 }

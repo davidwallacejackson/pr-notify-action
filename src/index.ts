@@ -27,7 +27,7 @@ async function verify(req: Request) {
     !crypto.timingSafeEqual(digest, checksum)
   ) {
     throw new Error(
-      `Request body digest (${digest}) did not match ${'x-hub-signature'} (${checksum})`
+      `Request body digest (${digest}) did not match x-hub-signature (${checksum})`
     )
   }
 }
@@ -38,6 +38,7 @@ export async function handle(req: Request, res: Response): Promise<void> {
     await verify(req)
     console.log('verified')
   } catch {
+    console.error('invalid request')
     res.status(400).send('invalid')
     return
   }
@@ -52,6 +53,7 @@ export async function handle(req: Request, res: Response): Promise<void> {
     await handleEvent(context)
     res.send('ok')
   } catch (error) {
+    console.error('server error: ', error.toString())
     res.status(500).send('not ok')
   }
 }
