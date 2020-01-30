@@ -7,6 +7,7 @@ import {
   Message
 } from './types'
 import sendMessages from './slack'
+import {uniqBy} from 'lodash'
 
 const link = (url: string, text: string) => `<${url}|${text}>`
 
@@ -60,28 +61,42 @@ async function handleReviewEvent(payload: ReviewPayload): Promise<Message[]> {
 
   const pr = payload.pull_request
   const review = payload.review
+  let recipients = []
   let actionText: string
 
   switch (payload.review.state) {
     case 'approved':
       actionText = 'approved'
+
+      // only the PR author needs to hear about approvals
+      recipients = [pr.user]
       break
     case 'changes_requested':
       actionText = 'requested changes to'
+      recipients = [pr.user, ...pr.assignees]
       break
     case 'commented':
       actionText = 'commented on'
+      recipients = [pr.user, ...pr.assignees]
   }
 
-  return [
-    {
-      githubUsername: pr.user.login,
+  // never send a review notification to the author of the review
+  recipients = recipients.filter(user => user.login !== review.user.login)
+
+  // only ever send one message to a user at a time
+  recipients = uniqBy(recipients, user => user.login)
+
+  return recipients.map(recipient => {
+    const aOrYour = recipient.login === pr.user.login ? 'your' : 'a'
+
+    return {
+      githubUsername: recipient.login,
       body: `${review.user.login} ${link(
         review.html_url,
         actionText
-      )} your PR: ${link(pr.html_url, pr.title)}`
+      )} ${aOrYour} PR: ${link(pr.html_url, pr.title)}`
     }
-  ]
+  })
 }
 
 async function handleCommentEvent(payload: CommentPayload): Promise<Message[]> {
@@ -98,6 +113,7 @@ async function handleCommentEvent(payload: CommentPayload): Promise<Message[]> {
     user => user.login !== comment.user.login
   )
 
+  console.log('recipients: ', recipients)
   return recipients.map(user => ({
     githubUsername: user.login,
     body: `${comment.user.login} ${link(

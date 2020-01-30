@@ -111,11 +111,16 @@ test('sends messages when changes are requested', async () => {
 
   const messages: Message[] = sendMessagesFake.args[0][0]
 
-  assert.strictEqual(messages.length, 1)
+  assert.strictEqual(messages.length, 2)
   assert.strictEqual(messages[0].githubUsername, 'foo')
   assert.include(
     messages[0].body,
-    'bar <http://github.com/repo/pulls/1/some-review|requested changes to>'
+    'bar <http://github.com/repo/pulls/1/some-review|requested changes to> your PR'
+  )
+  assert.strictEqual(messages[1].githubUsername, 'baz')
+  assert.include(
+    messages[1].body,
+    'bar <http://github.com/repo/pulls/1/some-review|requested changes to> a PR'
   )
 })
 
@@ -126,7 +131,7 @@ test('sends messages when a review with comment is left', async () => {
       action: 'submitted',
       pull_request: fakePR,
       review: {
-        body: 'Looks good.',
+        body: 'Commenting, but not explicitly approving...',
         url: '',
         html_url: 'http://github.com/repo/pulls/1/some-review',
         state: 'commented',
@@ -139,11 +144,45 @@ test('sends messages when a review with comment is left', async () => {
 
   const messages: Message[] = sendMessagesFake.args[0][0]
 
-  assert.strictEqual(messages.length, 1)
+  assert.strictEqual(messages.length, 2)
   assert.strictEqual(messages[0].githubUsername, 'foo')
   assert.include(
     messages[0].body,
-    'bar <http://github.com/repo/pulls/1/some-review|commented on>'
+    'bar <http://github.com/repo/pulls/1/some-review|commented on> your PR'
+  )
+  assert.strictEqual(messages[1].githubUsername, 'baz')
+  assert.include(
+    messages[1].body,
+    'bar <http://github.com/repo/pulls/1/some-review|commented on> a PR'
+  )
+})
+
+test('does not notify the PR author if they review their own PR', async () => {
+  await handleEvent({
+    eventName: 'pull_request_review',
+    payload: {
+      action: 'submitted',
+      pull_request: fakePR,
+      review: {
+        body: 'Following up on some of the above...',
+        url: '',
+        html_url: 'http://github.com/repo/pulls/1/some-review',
+        state: 'commented',
+        user: users.foo
+      }
+    }
+  })
+
+  assert.isTrue(sendMessagesFake.calledOnce)
+
+  const messages: Message[] = sendMessagesFake.args[0][0]
+
+  assert.strictEqual(messages.length, 2)
+  assert.strictEqual(messages[0].githubUsername, 'bar')
+  assert.strictEqual(messages[1].githubUsername, 'baz')
+  assert.include(
+    messages[0].body,
+    'foo <http://github.com/repo/pulls/1/some-review|commented on>'
   )
 })
 
