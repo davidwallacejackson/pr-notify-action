@@ -14,7 +14,7 @@ export default async function handleEvent(
   context: WebhookContext
 ): Promise<void> {
   console.log('handling event: ', context.eventName)
-  console.log(context)
+  console.log(JSON.stringify(context))
   let messages: Message[] = []
 
   switch (context.eventName) {
