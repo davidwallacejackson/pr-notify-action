@@ -28,7 +28,7 @@ export default async function getConfig(): Promise<Config> {
   let blacklist
 
   try {
-    blacklist = process.env['PR_NOTIFY_BLACKLIST']
+    blacklist = JSON.parse(process.env['PR_NOTIFY_BLACKLIST'] as string)
   } catch {
     blacklist = []
   }
