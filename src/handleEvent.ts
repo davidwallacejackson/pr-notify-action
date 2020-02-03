@@ -9,6 +9,7 @@ import {
 import sendMessages from './slack'
 import {uniqBy} from 'lodash'
 import {getInvolvedUsers} from './github'
+import getConfig from './config'
 
 const link = (url: string, text: string) => `<${url}|${text}>`
 
@@ -69,6 +70,16 @@ async function handleReviewEvent(payload: ReviewPayload): Promise<Message[]> {
 
   const pr = payload.pull_request
   const review = payload.review
+
+  const {blacklist} = await getConfig()
+
+  if (blacklist.includes(review.user.login)) {
+    console.log(
+      `${review.user.login} is blacklisted -- not sending a notification`
+    )
+    return []
+  }
+
   let recipients = []
   let actionText: string
 
@@ -117,6 +128,16 @@ async function handleCommentEvent(payload: CommentPayload): Promise<Message[]> {
   // (but NOT to whomever wrote the comment)
   const pr = payload.pull_request
   const comment = payload.comment
+
+  const {blacklist} = await getConfig()
+
+  if (blacklist.includes(comment.user.login)) {
+    console.log(
+      `${comment.user.login} is blacklisted -- not sending a notification`
+    )
+    return []
+  }
+
   const recipients = (await getInvolvedUsers(pr)).filter(
     user => user.login !== comment.user.login
   )

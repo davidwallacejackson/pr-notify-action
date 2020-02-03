@@ -25,12 +25,21 @@ export default async function getConfig(): Promise<Config> {
     throw new Error('PR_NOTIFY_GITHUB_TOKEN must be set')
   }
 
+  let blacklist
+
+  try {
+    blacklist = process.env['PR_NOTIFY_BLACKLIST']
+  } catch {
+    blacklist = []
+  }
+
   try {
     return {
       users: JSON.parse(usersString),
       slackToken,
       secret,
-      gitHubToken
+      gitHubToken,
+      blacklist
     }
   } catch {
     throw new Error(usersError)

@@ -78,4 +78,5 @@ export type Config = {
   slackToken: string
   gitHubToken: string
   secret: string
+  blacklist: string[]
 }

@@ -4,7 +4,8 @@ import nock from 'nock'
 const users: {[name: string]: GitHubUser} = {
   foo: {login: 'foo'},
   bar: {login: 'bar'},
-  baz: {login: 'baz'}
+  baz: {login: 'baz'},
+  quux: {login: 'quux'}
 }
 
 const fakePR: PullRequest = {
@@ -35,7 +36,8 @@ jest.mock('../src/config', () => ({
       },
       slackToken: 'SLACK_TOKEN',
       gitHubToken: 'GITHUB_TOKEN',
-      secret: 'secret'
+      secret: 'secret',
+      blacklist: ['quux']
     })
 }))
 
@@ -297,5 +299,39 @@ test("ignores events that it's not supposed to handle", async () => {
     eventName: 'other_event',
     payload: {}
   })
+  assert.isTrue(sendMessagesFake.notCalled)
+})
+
+it('prevents messages from being sent from users on the blacklist', async () => {
+  await handleEvent({
+    eventName: 'pull_request_review_comment',
+    payload: {
+      action: 'created',
+      pull_request: fakePR,
+      comment: {
+        url: '',
+        html_url: 'http://github.com/repo/pulls/1/comments/1',
+        body: 'Hmm.',
+        user: users.quux
+      }
+    }
+  })
+  assert.isTrue(sendMessagesFake.notCalled)
+
+  await handleEvent({
+    eventName: 'pull_request_review',
+    payload: {
+      action: 'submitted',
+      pull_request: fakePR,
+      review: {
+        body: 'Following up on some of the above...',
+        url: '',
+        html_url: 'http://github.com/repo/pulls/1/some-review',
+        state: 'commented',
+        user: users.quux
+      }
+    }
+  })
+
   assert.isTrue(sendMessagesFake.notCalled)
 })
