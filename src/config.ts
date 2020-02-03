@@ -20,11 +20,17 @@ export default async function getConfig(): Promise<Config> {
     throw new Error('PR_NOTIFY_SECRET must be set')
   }
 
+  const gitHubToken = process.env['PR_NOTIFY_GITHUB_TOKEN']
+  if (gitHubToken === '' || typeof gitHubToken !== 'string') {
+    throw new Error('PR_NOTIFY_GITHUB_TOKEN must be set')
+  }
+
   try {
     return {
       users: JSON.parse(usersString),
       slackToken,
-      secret
+      secret,
+      gitHubToken
     }
   } catch {
     throw new Error(usersError)

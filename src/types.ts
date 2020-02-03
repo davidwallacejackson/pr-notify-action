@@ -46,6 +46,7 @@ export type SlackUser = {
 }
 
 export type PullRequest = {
+  id: number
   url: string
   html_url: string
   user: GitHubUser
@@ -65,6 +66,7 @@ export type GitHubUser = {
 }
 
 export type GitHubComment = {
+  id: number
   url: string
   html_url: string
   body: string
@@ -74,5 +76,6 @@ export type GitHubComment = {
 export type Config = {
   users: {[githubUsername: string]: string}
   slackToken: string
+  gitHubToken: string
   secret: string
 }

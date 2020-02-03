@@ -8,6 +8,7 @@ import {
 } from './types'
 import sendMessages from './slack'
 import {uniqBy} from 'lodash'
+import {getInvolvedUsers} from './github'
 
 const link = (url: string, text: string) => `<${url}|${text}>`
 
@@ -34,13 +35,6 @@ export default async function handleEvent(
     console.log(JSON.stringify(messages))
     await sendMessages(messages)
   }
-}
-
-export function getInvolvedUsers(pr: PullRequest) {
-  return uniqBy(
-    [pr.user, ...pr.requested_reviewers, ...pr.requested_reviewers],
-    user => user.login
-  )
 }
 
 async function handlePREvent(payload: PullRequestPayload): Promise<Message[]> {
@@ -87,11 +81,11 @@ async function handleReviewEvent(payload: ReviewPayload): Promise<Message[]> {
       break
     case 'changes_requested':
       actionText = 'requested changes to'
-      recipients = [pr.user, ...pr.requested_reviewers]
+      recipients = await getInvolvedUsers(pr)
       break
     case 'commented':
       actionText = 'commented on'
-      recipients = [pr.user, ...pr.requested_reviewers]
+      recipients = await getInvolvedUsers(pr)
   }
 
   // never send a review notification to the author of the review
@@ -123,7 +117,7 @@ async function handleCommentEvent(payload: CommentPayload): Promise<Message[]> {
   // (but NOT to whomever wrote the comment)
   const pr = payload.pull_request
   const comment = payload.comment
-  const recipients = [pr.user, ...pr.requested_reviewers].filter(
+  const recipients = (await getInvolvedUsers(pr)).filter(
     user => user.login !== comment.user.login
   )
 

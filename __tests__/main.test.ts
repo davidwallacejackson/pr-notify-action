@@ -1,4 +1,5 @@
-import sinon from 'sinon'
+import sinon, {SinonFakeServer} from 'sinon'
+import nock from 'nock'
 
 const users: {[name: string]: GitHubUser} = {
   foo: {login: 'foo'},
@@ -7,8 +8,9 @@ const users: {[name: string]: GitHubUser} = {
 }
 
 const fakePR: PullRequest = {
-  url: '',
-  html_url: 'github.com/repo/pulls/1234',
+  id: 1,
+  url: 'http://api.github.com/repo/pulls/1234',
+  html_url: 'http://github.com/repo/pulls/1234',
   user: users.foo,
   title: 'Fake PR',
   requested_reviewers: [users.bar, users.baz]
@@ -20,6 +22,8 @@ jest.mock('../src/slack', () => ({
   default: sendMessagesFake
 }))
 
+nock.disableNetConnect()
+
 jest.mock('../src/config', () => ({
   __esModule: true,
   default: () =>
@@ -30,6 +34,7 @@ jest.mock('../src/config', () => ({
         baz: 'baz@email.com'
       },
       slackToken: 'SLACK_TOKEN',
+      gitHubToken: 'GITHUB_TOKEN',
       secret: 'secret'
     })
 }))
@@ -39,8 +44,23 @@ import {assert} from 'chai'
 import {PullRequest, GitHubUser, Message, WebhookContext} from '../src/types'
 import handleEvent from '../src/handleEvent'
 
+// mock the calls needed for getInvolvedUsers
+// call .done() on the returned scope to assert the two calls were made
+const mockGitHubCalls = () => {
+  const fakeCommentsOrReviews = [{user: users.bar}, {user: users.baz}]
+  return nock('http://api.github.com')
+    .get(/comments$/)
+    .reply(200, fakeCommentsOrReviews)
+    .get(/reviews$/)
+    .reply(200, fakeCommentsOrReviews)
+}
+
 beforeEach(() => {
   sendMessagesFake.resetHistory()
+})
+
+afterEach(() => {
+  nock
 })
 
 test('sends messages when a review is requested', async () => {
@@ -95,6 +115,7 @@ test('sends messages when a PR is approved', async () => {
 })
 
 test('sends messages when changes are requested', async () => {
+  const scope = mockGitHubCalls()
   await handleEvent({
     eventName: 'pull_request_review',
     payload: {
@@ -125,9 +146,11 @@ test('sends messages when changes are requested', async () => {
     messages[1].body,
     'bar <http://github.com/repo/pulls/1/some-review|requested changes to> a PR'
   )
+  scope.done()
 })
 
 test('sends messages when a review with comment is left', async () => {
+  const scope = mockGitHubCalls()
   await handleEvent({
     eventName: 'pull_request_review',
     payload: {
@@ -158,9 +181,11 @@ test('sends messages when a review with comment is left', async () => {
     messages[1].body,
     'bar <http://github.com/repo/pulls/1/some-review|commented on> a PR'
   )
+  scope.done()
 })
 
 test('does not notify the PR author if they review their own PR', async () => {
+  const scope = mockGitHubCalls()
   await handleEvent({
     eventName: 'pull_request_review',
     payload: {
@@ -187,9 +212,17 @@ test('does not notify the PR author if they review their own PR', async () => {
     messages[0].body,
     'foo <http://github.com/repo/pulls/1/some-review|commented on>'
   )
+  scope.done()
 })
 
 test('sends messages when a comment is left on a PR', async () => {
+  const fakeCommentsOrReviews = [{user: users.bar}, {user: users.baz}]
+  const scope = nock('http://api.github.com')
+    .get(/comments$/)
+    .reply(200, fakeCommentsOrReviews)
+    .get(/reviews$/)
+    .reply(200, fakeCommentsOrReviews)
+
   await handleEvent({
     eventName: 'pull_request_review_comment',
     payload: {
@@ -216,6 +249,7 @@ test('sends messages when a comment is left on a PR', async () => {
     'baz <http://github.com/repo/pulls/1/comments/1|commented on>'
   )
   assert.include(messages[0].body, 'Hmm.')
+  scope.done()
 })
 
 test("ignores events that it's not supposed to handle", async () => {
