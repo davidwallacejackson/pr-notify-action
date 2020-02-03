@@ -1,10 +1,10 @@
-import * as core from '@actions/core'
 import {
   WebhookContext,
   PullRequestPayload,
   ReviewPayload,
   CommentPayload,
-  Message
+  Message,
+  PullRequest
 } from './types'
 import sendMessages from './slack'
 import {uniqBy} from 'lodash'
@@ -36,21 +36,35 @@ export default async function handleEvent(
   }
 }
 
+export function getInvolvedUsers(pr: PullRequest) {
+  return uniqBy(
+    [pr.user, ...pr.requested_reviewers, ...pr.requested_reviewers],
+    user => user.login
+  )
+}
+
 async function handlePREvent(payload: PullRequestPayload): Promise<Message[]> {
-  console.log('handling PR')
-  if (payload.action !== 'assigned') {
+  if (payload.action !== 'review_requested') {
     return []
   }
 
+  // only notify people who were added on this specific event
+  const requestedReviewer = payload.requested_reviewer
+
+  if (!requestedReviewer) {
+    throw new Error('requested reviewer not found on review request event')
+  }
   const pr = payload.pull_request
 
-  return payload.pull_request.assignees.map(user => ({
-    githubUsername: user.login,
-    body: `${pr.user.login} requested your review on a PR: ${link(
-      pr.html_url,
-      pr.title
-    )}`
-  }))
+  return [
+    {
+      githubUsername: requestedReviewer.login,
+      body: `${pr.user.login} requested your review on a PR: ${link(
+        pr.html_url,
+        pr.title
+      )}`
+    }
+  ]
 }
 
 async function handleReviewEvent(payload: ReviewPayload): Promise<Message[]> {
@@ -73,11 +87,11 @@ async function handleReviewEvent(payload: ReviewPayload): Promise<Message[]> {
       break
     case 'changes_requested':
       actionText = 'requested changes to'
-      recipients = [pr.user, ...pr.assignees]
+      recipients = [pr.user, ...pr.requested_reviewers]
       break
     case 'commented':
       actionText = 'commented on'
-      recipients = [pr.user, ...pr.assignees]
+      recipients = [pr.user, ...pr.requested_reviewers]
   }
 
   // never send a review notification to the author of the review
@@ -109,7 +123,7 @@ async function handleCommentEvent(payload: CommentPayload): Promise<Message[]> {
   // (but NOT to whomever wrote the comment)
   const pr = payload.pull_request
   const comment = payload.comment
-  const recipients = [pr.user, ...payload.pull_request.assignees].filter(
+  const recipients = [pr.user, ...pr.requested_reviewers].filter(
     user => user.login !== comment.user.login
   )
 

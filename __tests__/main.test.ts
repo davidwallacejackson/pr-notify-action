@@ -11,7 +11,7 @@ const fakePR: PullRequest = {
   html_url: 'github.com/repo/pulls/1234',
   user: users.foo,
   title: 'Fake PR',
-  assignees: [users.bar, users.baz]
+  requested_reviewers: [users.bar, users.baz]
 }
 
 const sendMessagesFake = sinon.fake.returns(Promise.resolve(null))
@@ -43,12 +43,13 @@ beforeEach(() => {
   sendMessagesFake.resetHistory()
 })
 
-test('sends messages when a review is assigned', async () => {
+test('sends messages when a review is requested', async () => {
   await handleEvent({
     eventName: 'pull_request',
     payload: {
-      action: 'assigned',
-      pull_request: fakePR
+      action: 'review_requested',
+      pull_request: fakePR,
+      requested_reviewer: users.bar
     }
   })
 
@@ -57,10 +58,12 @@ test('sends messages when a review is assigned', async () => {
   const messages: Message[] = sendMessagesFake.args[0][0]
 
   assert.strictEqual(messages[0].githubUsername, 'bar')
+  console.log(messages[0])
   assert.include(messages[0].body, 'foo requested your review')
 
-  assert.strictEqual(messages[1].githubUsername, 'baz')
-  assert.include(messages[1].body, 'foo requested your review')
+  // note that baz does *not* get a notification, even though he's
+  // listed as a requested reviewer on the PR -- because he's not
+  // the reviewer who's being "added" on this payload
 })
 
 test('sends messages when a PR is approved', async () => {

@@ -23,8 +23,9 @@ export type CommentPayload = {
 }
 
 export type PullRequestPayload = {
-  action: 'review_requested' | string
+  action: 'review_requested' | 'assigned'
   pull_request: PullRequest
+  requested_reviewer?: GitHubUser
 }
 
 export type ReviewPayload = {
@@ -49,7 +50,7 @@ export type PullRequest = {
   html_url: string
   user: GitHubUser
   title: string
-  assignees: GitHubUser[]
+  requested_reviewers: GitHubUser[]
 }
 
 export type PullRequestReview = {
