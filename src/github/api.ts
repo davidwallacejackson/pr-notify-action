@@ -1,6 +1,6 @@
-import { GitHub } from './types'
+import { GitHub } from '../types'
 import {uniqBy} from 'lodash'
-import getConfig from './config'
+import getConfig from '../config'
 import fetch from 'node-fetch'
 
 export async function gitHubAPI(url: string) {
