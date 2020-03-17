@@ -1,10 +1,7 @@
 import {
   WebhookContext,
-  PullRequestPayload,
-  ReviewPayload,
-  CommentPayload,
-  Message,
-  PullRequest
+  GitHub,
+  Message
 } from './types'
 import sendMessages from './slack'
 import {uniqBy} from 'lodash'
@@ -38,7 +35,7 @@ export default async function handleEvent(
   }
 }
 
-async function handlePREvent(payload: PullRequestPayload): Promise<Message[]> {
+async function handlePREvent(payload: GitHub.PullRequestPayload): Promise<Message[]> {
   if (payload.action !== 'review_requested') {
     return []
   }
@@ -62,7 +59,7 @@ async function handlePREvent(payload: PullRequestPayload): Promise<Message[]> {
   ]
 }
 
-async function handleReviewEvent(payload: ReviewPayload): Promise<Message[]> {
+async function handleReviewEvent(payload: GitHub.ReviewPayload): Promise<Message[]> {
   console.log('handling review')
   if (payload.action !== 'submitted') {
     return []
@@ -118,7 +115,7 @@ async function handleReviewEvent(payload: ReviewPayload): Promise<Message[]> {
   })
 }
 
-async function handleCommentEvent(payload: CommentPayload): Promise<Message[]> {
+async function handleCommentEvent(payload: GitHub.CommentPayload): Promise<Message[]> {
   console.log('handling comment')
   if (payload.action !== 'created') {
     return []

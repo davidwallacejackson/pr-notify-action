@@ -1,4 +1,4 @@
-import {PullRequestReview, PullRequest, GitHubComment} from './types'
+import { GitHub } from './types'
 import {uniqBy} from 'lodash'
 import getConfig from './config'
 import fetch from 'node-fetch'
@@ -14,13 +14,13 @@ export async function gitHubAPI(url: string) {
   return resp.json()
 }
 
-async function getComments(pr: PullRequest): Promise<GitHubComment[]> {
-  return (await gitHubAPI(`${pr.url}/comments`)) as GitHubComment[]
+async function getComments(pr: GitHub.PullRequest): Promise<GitHub.GitHubComment[]> {
+return (await gitHubAPI(`${pr.url}/comments`)) as GitHub.GitHubComment[]
 }
-async function getReviews(pr: PullRequest): Promise<PullRequestReview[]> {
-  return (await gitHubAPI(`${pr.url}/reviews`)) as PullRequestReview[]
+async function getReviews(pr: GitHub.PullRequest): Promise<GitHub.PullRequestReview[]> {
+  return (await gitHubAPI(`${pr.url}/reviews`)) as GitHub.PullRequestReview[]
 }
-export async function getInvolvedUsers(pr: PullRequest) {
+export async function getInvolvedUsers(pr: GitHub.PullRequest) {
   const [comments, reviews] = await Promise.all([
     getComments(pr),
     getReviews(pr)

@@ -1,14 +1,14 @@
 import sinon, {SinonFakeServer} from 'sinon'
 import nock from 'nock'
 
-const users: {[name: string]: GitHubUser} = {
+const users: {[name: string]: GitHub.GitHubUser} = {
   foo: {login: 'foo'},
   bar: {login: 'bar'},
   baz: {login: 'baz'},
   quux: {login: 'quux'}
 }
 
-const fakePR: PullRequest = {
+const fakePR: GitHub.PullRequest = {
   id: 1,
   url: 'http://api.github.com/repo/pulls/1234',
   html_url: 'http://github.com/repo/pulls/1234',
@@ -43,7 +43,7 @@ jest.mock('../src/config', () => ({
 
 import {assert} from 'chai'
 
-import {PullRequest, GitHubUser, Message, WebhookContext} from '../src/types'
+import {GitHub, Message, WebhookContext} from '../src/types'
 import handleEvent from '../src/handleEvent'
 
 // mock the calls needed for getInvolvedUsers
