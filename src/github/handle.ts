@@ -1,7 +1,7 @@
 import {GitHub, Message} from '../types'
 import {link} from '../util'
 import getConfig from '../config'
-import {getInvolvedUsers} from './api'
+import {getInvolvedUsers, getIssuePullRequest} from './api'
 import {uniqBy} from 'lodash'
 
 export async function handlePREvent(
@@ -88,8 +88,8 @@ export async function handleReviewEvent(
   })
 }
 
-export async function handleCommentEvent(
-  payload: GitHub.CommentPayload
+export async function handlePullRequestReviewCommentEvent(
+  payload: GitHub.PullRequestReviewCommentPayload
 ): Promise<Message[]> {
   console.log('handling comment')
   if (payload.action !== 'created') {
@@ -99,6 +99,48 @@ export async function handleCommentEvent(
   // send the message to all requested reviewers, plus the PR author
   // (but NOT to whomever wrote the comment)
   const pr = payload.pull_request
+  const comment = payload.comment
+
+  const {blacklist} = await getConfig()
+
+  if (blacklist.includes(comment.user.login)) {
+    console.log(
+      `${comment.user.login} is blacklisted -- not sending a notification`
+    )
+    return []
+  }
+
+  const recipients = (await getInvolvedUsers(pr)).filter(
+    user => user.login !== comment.user.login
+  )
+
+  console.log('recipients: ', recipients)
+  return recipients.map(user => ({
+    githubUsername: user.login,
+    body: `${comment.user.login} ${link(
+      comment.html_url,
+      'commented on'
+    )} ${link(pr.html_url, pr.title)}: ${payload.comment.body}`
+  }))
+}
+
+export async function handleIssueCommentEvent(
+  payload: GitHub.IssueCommentPayload
+): Promise<Message[]> {
+  console.log('handling comment')
+  if (payload.action !== 'created') {
+    return []
+  }
+
+  // send the message to all requested reviewers, plus the PR author
+  // (but NOT to whomever wrote the comment)
+  const pr = await getIssuePullRequest(payload.issue)
+
+  if (!pr) {
+    // we got a comment for an issue that isn't a PR. ignore it.
+    return [];
+  }
+
   const comment = payload.comment
 
   const {blacklist} = await getConfig()

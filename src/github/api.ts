@@ -1,4 +1,4 @@
-import { GitHub } from '../types'
+import {GitHub} from '../types'
 import {uniqBy} from 'lodash'
 import getConfig from '../config'
 import fetch from 'node-fetch'
@@ -14,10 +14,14 @@ export async function gitHubAPI(url: string) {
   return resp.json()
 }
 
-async function getComments(pr: GitHub.PullRequest): Promise<GitHub.GitHubComment[]> {
-return (await gitHubAPI(`${pr.url}/comments`)) as GitHub.GitHubComment[]
+async function getComments(
+  pr: GitHub.PullRequest
+): Promise<GitHub.GitHubComment[]> {
+  return (await gitHubAPI(`${pr.url}/comments`)) as GitHub.GitHubComment[]
 }
-async function getReviews(pr: GitHub.PullRequest): Promise<GitHub.PullRequestReview[]> {
+async function getReviews(
+  pr: GitHub.PullRequest
+): Promise<GitHub.PullRequestReview[]> {
   return (await gitHubAPI(`${pr.url}/reviews`)) as GitHub.PullRequestReview[]
 }
 export async function getInvolvedUsers(pr: GitHub.PullRequest) {
@@ -33,4 +37,14 @@ export async function getInvolvedUsers(pr: GitHub.PullRequest) {
     [pr.user, ...pr.requested_reviewers, ...commentUsers, ...reviewUsers],
     user => user.login
   )
+}
+
+export async function getIssuePullRequest(
+  issue: GitHub.Issue
+): Promise<GitHub.PullRequest | undefined> {
+  if (!issue.pull_request) {
+    return undefined
+  }
+
+  return (await gitHubAPI(issue.pull_request.url) as GitHub.PullRequest)
 }

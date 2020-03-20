@@ -1,4 +1,4 @@
-export type CommentPayload = {
+export type PullRequestReviewCommentPayload = {
   action: 'created' | string
   pull_request: PullRequest
   comment: GitHubComment
@@ -14,6 +14,12 @@ export type ReviewPayload = {
   action: 'submitted' | string
   pull_request: PullRequest
   review: PullRequestReview
+}
+
+export type IssueCommentPayload = {
+  action: 'created' | string
+  issue: Issue
+  comment: GitHubComment
 }
 
 export type PullRequest = {
@@ -44,9 +50,19 @@ export type GitHubComment = {
   user: GitHubUser
 }
 
+export type Issue = {
+  id: number
+  url: string
+  html_url: string
+  pull_request?: {
+    url: string
+    html_url: string
+  }
+}
+
 export type GitHubWebhookContext = {
   eventName: 'pull_request_review_comment'
-  payload: CommentPayload
+  payload: PullRequestReviewCommentPayload
 }
 | {
   eventName: 'pull_request'
@@ -55,4 +71,7 @@ export type GitHubWebhookContext = {
 | {
   eventName: 'pull_request_review'
   payload: ReviewPayload
+} | {
+  eventName: 'issue_comment'
+  payload: IssueCommentPayload
 }

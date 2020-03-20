@@ -20,7 +20,10 @@ export default async function handleEvent(
       messages = await GHHandle.handleReviewEvent(context.payload)
       break
     case 'pull_request_review_comment':
-      messages = await GHHandle.handleCommentEvent(context.payload)
+      messages = await GHHandle.handlePullRequestReviewCommentEvent(context.payload)
+      break
+    case 'issue_comment':
+      messages = await GHHandle.handleIssueCommentEvent(context.payload)
   }
 
   if (messages.length > 0) {

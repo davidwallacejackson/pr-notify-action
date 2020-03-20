@@ -217,7 +217,7 @@ test('does not notify the PR author if they review their own PR', async () => {
   scope.done()
 })
 
-test('sends messages when a comment is left on a PR', async () => {
+test('sends messages when a comment is left on a PR diff', async () => {
   const fakeCommentsOrReviews = [{user: users.bar}, {user: users.baz}]
   const scope = nock('http://api.github.com')
     .get(/comments$/)
@@ -232,7 +232,7 @@ test('sends messages when a comment is left on a PR', async () => {
       pull_request: fakePR,
       comment: {
         url: '',
-        html_url: 'http://github.com/repo/pulls/1/comments/1',
+        html_url: 'http://github.com/repo/pull/1#issuecomment-1',
         body: 'Hmm.',
         user: users.baz
       }
@@ -248,11 +248,56 @@ test('sends messages when a comment is left on a PR', async () => {
   assert.strictEqual(messages[1].githubUsername, 'bar')
   assert.include(
     messages[0].body,
-    'baz <http://github.com/repo/pulls/1/comments/1|commented on>'
+    'baz <http://github.com/repo/pull/1#issuecomment-1|commented on>'
   )
   assert.include(messages[0].body, 'Hmm.')
   scope.done()
 })
+
+test('sends messages when a comment is left on a PR', async () => {
+  const fakeCommentsOrReviews = [{user: users.bar}, {user: users.baz}]
+  const scope = nock('http://api.github.com')
+    .get(/comments$/)
+    .reply(200, fakeCommentsOrReviews)
+    .get(/reviews$/)
+    .reply(200, fakeCommentsOrReviews)
+    .get(/repo\/pulls\//)
+    .reply(200, fakePR)
+
+  await handleEvent({
+    eventName: 'issue_comment',
+    payload: {
+      action: 'created',
+      issue: {
+        pull_request: {
+          url: fakePR.url,
+          html_url: fakePR.html_url
+        }
+      },
+      comment: {
+        url: '',
+        html_url: 'http://github.com/repo/pull/1#issuecomment-1',
+        body: 'Hmm.',
+        user: users.baz
+      }
+    }
+  })
+
+  assert.isTrue(sendMessagesFake.calledOnce)
+
+  const messages: Message[] = sendMessagesFake.args[0][0]
+
+  assert.strictEqual(messages.length, 2)
+  assert.strictEqual(messages[0].githubUsername, 'foo')
+  assert.strictEqual(messages[1].githubUsername, 'bar')
+  assert.include(
+    messages[0].body,
+    'baz <http://github.com/repo/pull/1#issuecomment-1|commented on>'
+  )
+  assert.include(messages[0].body, 'Hmm.')
+  scope.done()
+})
+
 
 test("ignores events that it's not supposed to handle", async () => {
   await handleEvent({
