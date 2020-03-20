@@ -1,7 +1,7 @@
 import sinon, {SinonFakeServer} from 'sinon'
 import nock from 'nock'
 
-const users: {[name: string]: GitHub.GitHubUser} = {
+const users: {[name: string]: GitHub.User} = {
   foo: {login: 'foo'},
   bar: {login: 'bar'},
   baz: {login: 'baz'},

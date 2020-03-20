@@ -1,13 +1,13 @@
 export type PullRequestReviewCommentPayload = {
   action: 'created' | string
   pull_request: PullRequest
-  comment: GitHubComment
+  comment: Comment
 }
 
 export type PullRequestPayload = {
   action: 'review_requested' | 'assigned'
   pull_request: PullRequest
-  requested_reviewer?: GitHubUser
+  requested_reviewer?: User
 }
 
 export type ReviewPayload = {
@@ -19,35 +19,35 @@ export type ReviewPayload = {
 export type IssueCommentPayload = {
   action: 'created' | string
   issue: Issue
-  comment: GitHubComment
+  comment: Comment
 }
 
 export type PullRequest = {
   id: number
   url: string
   html_url: string
-  user: GitHubUser
+  user: User
   title: string
-  requested_reviewers: GitHubUser[]
+  requested_reviewers: User[]
 }
 
 export type PullRequestReview = {
   body: string
   html_url: string
   state: 'approved' | 'changes_requested' | 'commented'
-  user: GitHubUser
+  user: User
 }
 
-export type GitHubUser = {
+export type User = {
   login: string
 }
 
-export type GitHubComment = {
+export type Comment = {
   id: number
   url: string
   html_url: string
   body: string
-  user: GitHubUser
+  user: User
 }
 
 export type Issue = {
