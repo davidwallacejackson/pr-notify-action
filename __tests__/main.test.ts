@@ -44,7 +44,7 @@ jest.mock('../src/config', () => ({
 import {assert} from 'chai'
 
 import {GitHub, Message, WebhookContext} from '../src/types'
-import handleEvent from '../src/handleEvent'
+import { handleEvent } from '../src/github'
 
 // mock the calls needed for getInvolvedUsers
 // call .done() on the returned scope to assert the two calls were made

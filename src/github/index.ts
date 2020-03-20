@@ -1,8 +1,95 @@
-import {GitHub, Message} from '../types'
+import crypto from 'crypto'
+import {Request, Response} from 'express'
+import {uniqBy} from 'lodash'
+
+import {GitHub, WebhookContext, Message} from '../types'
 import {link} from '../util'
 import getConfig from '../config'
 import {getInvolvedUsers, getIssuePullRequest} from './api'
-import {uniqBy} from 'lodash'
+import sendMessages from '../slack'
+
+async function verify(req: Request) {
+  const {secret} = await getConfig()
+  if (req.method.toLowerCase() !== 'post') {
+    throw new Error('must be POST')
+  }
+
+  const payload = JSON.stringify(req.body)
+  if (!payload) {
+    throw new Error('Request body empty')
+  }
+
+  const sig = req.get('x-hub-signature') || ''
+  const hmac = crypto.createHmac('sha1', secret)
+  const digest = Buffer.from(
+    'sha1=' + hmac.update(payload).digest('hex'),
+    'utf8'
+  )
+  const checksum = Buffer.from(sig, 'utf8')
+  if (
+    checksum.length !== digest.length ||
+    !crypto.timingSafeEqual(digest, checksum)
+  ) {
+    throw new Error(
+      `Request body digest (${digest}) did not match x-hub-signature (${checksum})`
+    )
+  }
+}
+
+export default async function handleGitHubWebhook(
+  req: Request,
+  res: Response
+): Promise<void> {
+  try {
+    console.log('verifying...')
+    await verify(req)
+    console.log('verified')
+  } catch {
+    console.error('invalid request')
+    res.status(400).send('invalid')
+    return
+  }
+
+  try {
+    const json = req.body
+    const eventName = req.get('x-github-event') as string
+    const context = {
+      eventName,
+      payload: json
+    }
+    await handleEvent(context)
+    res.send('ok')
+  } catch (error) {
+    console.error('server error: ', error.toString())
+    res.status(500).send('not ok')
+  }
+}
+
+export async function handleEvent(context: WebhookContext): Promise<void> {
+  console.log('handling event: ', context.eventName)
+  console.log(JSON.stringify(context))
+  let messages: Message[] = []
+
+  switch (context.eventName) {
+    case 'pull_request':
+      messages = await handlePREvent(context.payload)
+      break
+    case 'pull_request_review':
+      messages = await handleReviewEvent(context.payload)
+      break
+    case 'pull_request_review_comment':
+      messages = await handlePullRequestReviewCommentEvent(context.payload)
+      break
+    case 'issue_comment':
+      messages = await handleIssueCommentEvent(context.payload)
+  }
+
+  if (messages.length > 0) {
+    console.log('sending messages')
+    console.log(JSON.stringify(messages))
+    await sendMessages(messages)
+  }
+}
 
 export async function handlePREvent(
   payload: GitHub.PullRequestPayload
@@ -138,7 +225,7 @@ export async function handleIssueCommentEvent(
 
   if (!pr) {
     // we got a comment for an issue that isn't a PR. ignore it.
-    return [];
+    return []
   }
 
   const comment = payload.comment
