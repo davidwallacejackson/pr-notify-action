@@ -82,6 +82,9 @@ export async function handleEvent(context: WebhookContext): Promise<void> {
       break
     case 'issue_comment':
       messages = await handleIssueCommentEvent(context.payload)
+      break;
+    default:
+      console.log(`unhandled GitHub event: ${context.eventName}`)
   }
 
   if (messages.length > 0) {
@@ -91,7 +94,7 @@ export async function handleEvent(context: WebhookContext): Promise<void> {
   }
 }
 
-export async function handlePREvent(
+async function handlePREvent(
   payload: GitHub.PullRequestPayload
 ): Promise<Message[]> {
   if (payload.action !== 'review_requested') {
@@ -117,7 +120,7 @@ export async function handlePREvent(
   ]
 }
 
-export async function handleReviewEvent(
+async function handleReviewEvent(
   payload: GitHub.ReviewPayload
 ): Promise<Message[]> {
   console.log('handling review')
@@ -175,7 +178,7 @@ export async function handleReviewEvent(
   })
 }
 
-export async function handlePullRequestReviewCommentEvent(
+async function handlePullRequestReviewCommentEvent(
   payload: GitHub.PullRequestReviewCommentPayload
 ): Promise<Message[]> {
   console.log('handling comment')
@@ -211,7 +214,7 @@ export async function handlePullRequestReviewCommentEvent(
   }))
 }
 
-export async function handleIssueCommentEvent(
+async function handleIssueCommentEvent(
   payload: GitHub.IssueCommentPayload
 ): Promise<Message[]> {
   console.log('handling comment')

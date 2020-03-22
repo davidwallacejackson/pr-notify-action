@@ -14,17 +14,17 @@ export async function gitHubAPI(url: string) {
   return resp.json()
 }
 
-async function getComments(
-  pr: GitHub.PullRequest
-): Promise<GitHub.GitHubComment[]> {
-  return (await gitHubAPI(`${pr.url}/comments`)) as GitHub.GitHubComment[]
+async function getComments(pr: GitHub.PullRequest): Promise<GitHub.Comment[]> {
+  return (await gitHubAPI(`${pr.url}/comments`)) as GitHub.Comment[]
 }
 async function getReviews(
   pr: GitHub.PullRequest
 ): Promise<GitHub.PullRequestReview[]> {
   return (await gitHubAPI(`${pr.url}/reviews`)) as GitHub.PullRequestReview[]
 }
-export async function getInvolvedUsers(pr: GitHub.PullRequest) {
+export async function getInvolvedUsers(
+  pr: GitHub.PullRequest
+): Promise<GitHub.User[]> {
   const [comments, reviews] = await Promise.all([
     getComments(pr),
     getReviews(pr)
@@ -46,5 +46,5 @@ export async function getIssuePullRequest(
     return undefined
   }
 
-  return (await gitHubAPI(issue.pull_request.url) as GitHub.PullRequest)
+  return (await gitHubAPI(issue.pull_request.url)) as GitHub.PullRequest
 }

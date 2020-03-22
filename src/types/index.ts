@@ -1,6 +1,7 @@
 import { GitHubWebhookContext } from './github';
 
 export * as GitHub from './github';
+export * as Jira from './jira';
 
 export type WebhookContext =
   | GitHubWebhookContext
@@ -11,6 +12,9 @@ export type WebhookContext =
 
 export type Message = {
   githubUsername: string
+  body: string
+} | {
+  email: string
   body: string
 }
 
@@ -25,5 +29,7 @@ export type Config = {
   slackToken: string
   gitHubToken: string
   secret: string
+  jiraUsername: string
+  jiraToken: string
   blacklist: string[]
 }
