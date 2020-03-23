@@ -1,29 +1,32 @@
+export type EventPayload = IssueEventPayload | IssueCommentEventPayload
 export type IssueEventPayload = {
-  webhookEvent:
-    | 'jira:issue_created'
-    | 'jira:issue_updated'
-    | 'comment_created'
-    | string
-  user: User
-  issue: Issue
+  webhookEvent: 'jira:issue_created' | 'jira:issue_updated'
+  user: PartialUser
+  issue: PartialIssue
+}
+
+export type IssueCommentEventPayload = {
+  webhookEvent: 'comment_created'
+  issue: PartialIssue
   comment: IssueComment
 }
 
 export type User = {
   key: string
   name: string
+  displayName: string
   emailAddress: string
 }
 
 export type Issue = {
   id: string
   key: string
-  summary: string
   self: string
   fields: {
     watches: {
       self: string
     }
+    summary: string
   }
   worklog: {
     author: {
@@ -40,14 +43,15 @@ export type Issue = {
 export type IssueComment = {
   author: {
     self: string
-    name: string
-    emailAddress: string
+    accountId: string
+    displayName: string
   }
   updateAuthor: {
     self: string
-    name: string
-    emailAddress: string
+    accountId: string
+    displayName: string
   }
+  body: string
 }
 
 export type WatchersPayload = {
@@ -56,11 +60,25 @@ export type WatchersPayload = {
   watchCounts: number
   watchers: {
     self: string
+    accountId: string
 
     // this parameter is not documented, but does show up
-    email: string
+    emailAddress: string
 
     displayName: string
     active: boolean
   }[]
+}
+
+// sometimes the webhook doesn't send all of a resource, depending on the event
+// it's safer to assume only the minimum, and fetch the full resource from the
+// API
+export type PartialIssue = {
+  self: string
+  key: string
+}
+
+export type PartialUser = {
+  self: string
+  accountId: string
 }

@@ -39,8 +39,22 @@ export async function jiraAPI(url: string, queryParams?: any) {
   return resp.json()
 }
 
-export async function getIssueWatchers(issue: Jira.Issue) {
-  return (await jiraAPI(issue.fields.watches.self)) as Jira.WatchersPayload
+export async function getIssueWatchers(partialIssue: Jira.PartialIssue) {
+  const watchersURL = `${getJiraBaseURL(partialIssue.self)}/rest/api/2/issue/${
+    partialIssue.key
+  }/watchers`
+  return (await jiraAPI(watchersURL)) as Jira.WatchersPayload
+}
+
+export async function getUser(userURL: string) {
+  return (await jiraAPI(userURL)) as Jira.User
+}
+
+export async function getFullIssue(partialIssue: Jira.PartialIssue) {
+  const issueURL = `${getJiraBaseURL(partialIssue.self)}/rest/api/2/issue/${
+    partialIssue.key
+  }`
+  return (await jiraAPI(issueURL)) as Jira.Issue
 }
 
 export function getJiraBaseURL(restAPIURL: string) {
