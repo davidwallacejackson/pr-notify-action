@@ -25,9 +25,9 @@ export default async function getConfig(): Promise<Config> {
     throw new Error('PR_NOTIFY_GITHUB_TOKEN must be set')
   }
 
-  const jiraUsername = process.env['PR_NOTIFY_JIRA_EMAIL']
+  const jiraUsername = process.env['PR_NOTIFY_JIRA_USERNAME']
   if (jiraUsername === '' || typeof jiraUsername !== 'string') {
-    throw new Error('PR_NOTIFY_JIRA_EMAIL must be set')
+    throw new Error('PR_NOTIFY_JIRA_USERNAME must be set')
   }
 
   const jiraToken = process.env['PR_NOTIFY_JIRA_TOKEN']
