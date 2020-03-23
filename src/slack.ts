@@ -10,7 +10,7 @@ export default async function sendMessages(messages: Message[]): Promise<void> {
   const sends = messages.map(async message => {
     const userEmail = message.email
       ? message.email
-      : users[message.githubUsername]
+      : users[message.githubUsername as string]
 
     if (!userEmail) {
       return null
