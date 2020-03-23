@@ -12,8 +12,10 @@ export type WebhookContext =
 
 export type Message = {
   githubUsername: string
+  email: null
   body: string
 } | {
+  githubUsername: null
   email: string
   body: string
 }

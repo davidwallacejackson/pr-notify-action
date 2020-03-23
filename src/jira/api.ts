@@ -46,8 +46,9 @@ export async function getIssueWatchers(partialIssue: Jira.PartialIssue) {
   return (await jiraAPI(watchersURL)) as Jira.WatchersPayload
 }
 
-export async function getUser(userURL: string) {
-  return (await jiraAPI(userURL)) as Jira.User
+export async function getUser(baseURL: string, accountId: string) {
+  const userURL = `${baseURL}/rest/api/2/user`
+  return (await jiraAPI(userURL, {accountId})) as Jira.User
 }
 
 export async function getFullIssue(partialIssue: Jira.PartialIssue) {

@@ -44,7 +44,7 @@ jest.mock('../src/config', () => ({
 import {assert} from 'chai'
 
 import {GitHub, Message, WebhookContext} from '../src/types'
-import { handleEvent } from '../src/github'
+import {handleEvent} from '../src/github'
 
 // mock the calls needed for getInvolvedUsers
 // call .done() on the returned scope to assert the two calls were made
@@ -297,7 +297,6 @@ test('sends messages when a comment is left on a PR', async () => {
   assert.include(messages[0].body, 'Hmm.')
   scope.done()
 })
-
 
 test("ignores events that it's not supposed to handle", async () => {
   await handleEvent({

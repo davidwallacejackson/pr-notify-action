@@ -82,7 +82,7 @@ export async function handleEvent(context: WebhookContext): Promise<void> {
       break
     case 'issue_comment':
       messages = await handleIssueCommentEvent(context.payload)
-      break;
+      break
     default:
       console.log(`unhandled GitHub event: ${context.eventName}`)
   }
@@ -112,6 +112,7 @@ async function handlePREvent(
   return [
     {
       githubUsername: requestedReviewer.login,
+      email: null,
       body: `${pr.user.login} requested your review on a PR: ${link(
         pr.html_url,
         pr.title
@@ -170,6 +171,7 @@ async function handleReviewEvent(
 
     return {
       githubUsername: recipient.login,
+      email: null,
       body: `${review.user.login} ${link(
         review.html_url,
         actionText
@@ -207,6 +209,7 @@ async function handlePullRequestReviewCommentEvent(
   console.log('recipients: ', recipients)
   return recipients.map(user => ({
     githubUsername: user.login,
+    email: null,
     body: `${comment.user.login} ${link(
       comment.html_url,
       'commented on'
@@ -249,6 +252,7 @@ async function handleIssueCommentEvent(
   console.log('recipients: ', recipients)
   return recipients.map(user => ({
     githubUsername: user.login,
+    email: null,
     body: `${comment.user.login} ${link(
       comment.html_url,
       'commented on'

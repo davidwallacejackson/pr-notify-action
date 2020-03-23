@@ -8,8 +8,9 @@ export default async function sendMessages(messages: Message[]): Promise<void> {
   const web = new WebClient(slackToken)
 
   const sends = messages.map(async message => {
-    const userEmail =
-      'email' in message ? message.email : users[message.githubUsername]
+    const userEmail = message.email
+      ? message.email
+      : users[message.githubUsername]
 
     if (!userEmail) {
       return null

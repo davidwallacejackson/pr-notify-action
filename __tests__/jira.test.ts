@@ -1,20 +1,67 @@
 import sinon, {SinonFakeServer} from 'sinon'
 import nock from 'nock'
 
-const users: {[name: string]: GitHub.User} = {
-  foo: {login: 'foo'},
-  bar: {login: 'bar'},
-  baz: {login: 'baz'},
-  quux: {login: 'quux'}
+const BASE_API_URL = 'http://wandb.atlassian.net/rest/api/2/'
+
+const fakeUsers: Jira.User[] = [
+  {
+    self: `${BASE_API_URL}/user?accountId=1`,
+    accountId: '1',
+    name: 'foo',
+    displayName: 'Foo',
+    emailAddress: 'foo@email.com'
+  },
+  {
+    self: `${BASE_API_URL}/user?accountId=2`,
+    accountId: '2',
+    name: 'bar',
+    displayName: 'Bar',
+    emailAddress: 'bar@email.com'
+  }
+]
+
+const fakeIssue: Jira.Issue = {
+  self: `${BASE_API_URL}/1234`,
+  id: '1234',
+  key: 'WB-0001',
+  fields: {
+    summary: 'An issue'
+  }
 }
 
-const fakePR: GitHub.PullRequest = {
-  id: 1,
-  url: 'http://api.github.com/repo/pulls/1234',
-  html_url: 'http://github.com/repo/pulls/1234',
-  user: users.foo,
-  title: 'Fake PR',
-  requested_reviewers: [users.bar, users.baz]
+const fakeComment: Jira.IssueComment = {
+  self: `${BASE_API_URL}/comment/456`,
+  author: {
+    self: `${BASE_API_URL}/user?accountId=1`,
+    accountId: '1'
+  },
+  updateAuthor: {
+    self: `${BASE_API_URL}/user?accountId=1`,
+    accountId: '1'
+  },
+  body: 'looks good'
+}
+
+const fakeWatchers: Jira.WatchersPayload = {
+  self: `${BASE_API_URL}/issue/1234/watchers`,
+  isWatching: true,
+  watchCounts: 2,
+  watchers: [
+    {
+      self: fakeUsers[0].self,
+      accountId: fakeUsers[0].accountId,
+      active: true,
+      displayName: fakeUsers[0].displayName,
+      emailAddress: fakeUsers[0].emailAddress
+    },
+    {
+      self: fakeUsers[1].self,
+      accountId: fakeUsers[1].accountId,
+      active: true,
+      displayName: fakeUsers[1].displayName,
+      emailAddress: fakeUsers[1].emailAddress
+    }
+  ]
 }
 
 const sendMessagesFake = sinon.fake.returns(Promise.resolve(null))
@@ -37,24 +84,27 @@ jest.mock('../src/config', () => ({
       slackToken: 'SLACK_TOKEN',
       gitHubToken: 'GITHUB_TOKEN',
       secret: 'secret',
-      blacklist: ['quux']
+      blacklist: ['quux'],
+      jiraUsername: 'jiraUsername',
+      jiraToken: 'JIRA_TOKEN'
     })
 }))
 
 import {assert} from 'chai'
 
-import {GitHub, Message, WebhookContext} from '../src/types'
-import { handleEvent } from '../src/github'
+import {Jira, Message} from '../src/types'
+import {handleEvent} from '../src/jira'
 
-// mock the calls needed for getInvolvedUsers
-// call .done() on the returned scope to assert the two calls were made
-const mockGitHubCalls = () => {
-  const fakeCommentsOrReviews = [{user: users.bar}, {user: users.baz}]
-  return nock('http://api.github.com')
-    .get(/comments$/)
-    .reply(200, fakeCommentsOrReviews)
-    .get(/reviews$/)
-    .reply(200, fakeCommentsOrReviews)
+const mockJiraCalls = () => {
+  return nock('http://wandb.atlassian.net')
+    .get(/watchers$/)
+    .reply(200, fakeWatchers)
+    .get(/issue\/WB-0001$/)
+    .reply(200, fakeIssue)
+    .get(/user\?accountId=1$/)
+    .reply(200, fakeUsers[0])
+    .get(/user\?accountId=2$/)
+    .reply(200, fakeUsers[1])
 }
 
 beforeEach(() => {
@@ -65,13 +115,46 @@ afterEach(() => {
   nock
 })
 
-test('sends messages when a review is requested', async () => {
+test('sends messages when a comment is left on an issue', async () => {
+  const scope = mockJiraCalls()
   await handleEvent({
-    eventName: 'pull_request',
-    payload: {
-      action: 'review_requested',
-      pull_request: fakePR,
-      requested_reviewer: users.bar
+    webhookEvent: 'comment_created',
+    comment: fakeComment,
+    issue: fakeIssue
+  })
+
+  assert.isTrue(sendMessagesFake.calledOnce)
+
+  const messages: Message[] = sendMessagesFake.args[0][0]
+
+  assert.strictEqual(messages[0].email, 'bar@email.com')
+  console.log(messages[0])
+  assert.include(messages[0].body, 'foo commented on Jira issue')
+})
+
+test('sends a message when a user is assigned to an issue', async () => {
+  const scope = mockJiraCalls()
+  await handleEvent({
+    webhookEvent: 'jira:issue_updated',
+    issue: fakeIssue,
+    changelog: {
+      id: '999',
+      items: [
+        {
+          field: 'assignee',
+          from: null,
+          to: '2'
+        },
+        {
+          field: 'otherField',
+          from: 'some value',
+          to: 'some other value'
+        }
+      ]
+    },
+    user: {
+      self: fakeUsers[0].self,
+      accountId: fakeUsers[0].accountId
     }
   })
 
@@ -79,11 +162,36 @@ test('sends messages when a review is requested', async () => {
 
   const messages: Message[] = sendMessagesFake.args[0][0]
 
-  assert.strictEqual(messages[0].githubUsername, 'bar')
+  assert.strictEqual(messages[0].email, 'bar@email.com')
   console.log(messages[0])
-  assert.include(messages[0].body, 'foo requested your review')
+  assert.include(messages[0].body, 'foo assigned you')
+})
 
-  // note that baz does *not* get a notification, even though he's
-  // listed as a requested reviewer on the PR -- because he's not
-  // the reviewer who's being "added" on this payload
+test('sends no message when a user assigns themself to an issue', async () => {
+  const scope = mockJiraCalls()
+  await handleEvent({
+    webhookEvent: 'jira:issue_updated',
+    issue: fakeIssue,
+    changelog: {
+      id: '999',
+      items: [
+        {
+          field: 'assignee',
+          from: null,
+          to: '2'
+        },
+        {
+          field: 'otherField',
+          from: 'some value',
+          to: 'some other value'
+        }
+      ]
+    },
+    user: {
+      self: fakeUsers[1].self,
+      accountId: fakeUsers[1].accountId
+    }
+  })
+
+  assert.isTrue(sendMessagesFake.notCalled)
 })

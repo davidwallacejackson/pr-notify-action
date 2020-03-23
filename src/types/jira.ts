@@ -1,8 +1,16 @@
-export type EventPayload = IssueEventPayload | IssueCommentEventPayload
-export type IssueEventPayload = {
-  webhookEvent: 'jira:issue_created' | 'jira:issue_updated'
+export type EventPayload = IssueUpdatedPayload | IssueCommentEventPayload
+export type IssueUpdatedPayload = {
+  webhookEvent: 'jira:issue_updated'
   user: PartialUser
   issue: PartialIssue
+  changelog: {
+    id: string
+    items: {
+      field: string
+      from: string | null
+      to: string | null
+    }[]
+  }
 }
 
 export type IssueCommentEventPayload = {
@@ -12,7 +20,8 @@ export type IssueCommentEventPayload = {
 }
 
 export type User = {
-  key: string
+  self: string
+  accountId: string
   name: string
   displayName: string
   emailAddress: string
@@ -23,33 +32,19 @@ export type Issue = {
   key: string
   self: string
   fields: {
-    watches: {
-      self: string
-    }
     summary: string
   }
-  worklog: {
-    author: {
-      self: string
-      name: string
-    }
-    updateAuthor: {
-      self: string
-      name: string
-    }
-  }[]
 }
 
 export type IssueComment = {
+  self: string
   author: {
     self: string
     accountId: string
-    displayName: string
   }
   updateAuthor: {
     self: string
     accountId: string
-    displayName: string
   }
   body: string
 }
