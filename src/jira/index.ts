@@ -18,6 +18,9 @@ export default async function handleJiraWebhook(
 }
 
 export async function handleEvent(json: Jira.EventPayload) {
+  console.log('handling event: ', json.webhookEvent)
+  console.log(JSON.stringify(json))
+
   let messages: Message[] = []
   switch (json.webhookEvent) {
     case 'comment_created':
