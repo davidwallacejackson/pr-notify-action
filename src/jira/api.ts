@@ -24,6 +24,8 @@ export async function jiraAPI(url: string, queryParams?: any) {
 
   const query = queryParams ? '?' + querystring.stringify(queryParams) : ''
 
+  console.log('Jira API request:', url + query)
+
   // per https://developer.atlassian.com/server/jira/platform/basic-authentication/
   // and https://confluence.atlassian.com/cloud/api-tokens-938839638.html
   // (the token takes the place of a password)

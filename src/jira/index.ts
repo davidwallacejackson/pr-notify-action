@@ -49,16 +49,18 @@ async function handleCommentCreatedEvent(json: Jira.IssueCommentEventPayload) {
     getFullIssue(json.issue),
     getUser(getJiraBaseURL(json.issue.self), json.comment.author.accountId)
   ])
+
+  // as string[] is guaranteed by filtering for the truthiness of `email`
   const recipients = watchersPayload.watchers
     .map(watcher => watcher.emailAddress)
-    .filter(email => email !== author.emailAddress)
+    .filter(email => email && email !== author.emailAddress) as string[]
 
   const viewURL = getIssueViewURL(json.issue)
 
   return recipients.map(email => ({
     email,
     githubUsername: null,
-    body: `${author.name} commented on Jira issue: ${link(
+    body: `${author.displayName} commented on Jira issue: ${link(
       viewURL,
       fullIssue.fields.summary
     )}: ${json.comment.body}`
@@ -88,7 +90,7 @@ async function handleIssueUpdatedEvent(json: Jira.IssueUpdatedPayload) {
       messages.push({
         email: assignee.emailAddress,
         githubUsername: null,
-        body: `${updatingUser.name} assigned you to Jira issue: ${link(
+        body: `${updatingUser.displayName} assigned you to Jira issue: ${link(
           viewURL,
           fullIssue.fields.summary
         )}`

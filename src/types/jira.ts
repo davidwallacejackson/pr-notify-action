@@ -22,7 +22,6 @@ export type IssueCommentEventPayload = {
 export type User = {
   self: string
   accountId: string
-  name: string
   displayName: string
   emailAddress: string
 }
@@ -57,8 +56,9 @@ export type WatchersPayload = {
     self: string
     accountId: string
 
-    // this parameter is not documented, but does show up
-    emailAddress: string
+    // this parameter is not documented, but does show up if
+    // the user has a visible email
+    emailAddress?: string
 
     displayName: string
     active: boolean

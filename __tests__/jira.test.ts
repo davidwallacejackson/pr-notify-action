@@ -7,14 +7,12 @@ const fakeUsers: Jira.User[] = [
   {
     self: `${BASE_API_URL}/user?accountId=1`,
     accountId: '1',
-    name: 'foo',
     displayName: 'Foo',
     emailAddress: 'foo@email.com'
   },
   {
     self: `${BASE_API_URL}/user?accountId=2`,
     accountId: '2',
-    name: 'bar',
     displayName: 'Bar',
     emailAddress: 'bar@email.com'
   }
@@ -129,7 +127,7 @@ test('sends messages when a comment is left on an issue', async () => {
 
   assert.strictEqual(messages[0].email, 'bar@email.com')
   console.log(messages[0])
-  assert.include(messages[0].body, 'foo commented on Jira issue')
+  assert.include(messages[0].body, 'Foo commented on Jira issue')
 })
 
 test('sends a message when a user is assigned to an issue', async () => {
@@ -164,7 +162,7 @@ test('sends a message when a user is assigned to an issue', async () => {
 
   assert.strictEqual(messages[0].email, 'bar@email.com')
   console.log(messages[0])
-  assert.include(messages[0].body, 'foo assigned you')
+  assert.include(messages[0].body, 'Foo assigned you')
 })
 
 test('sends no message when a user assigns themself to an issue', async () => {
