@@ -102,5 +102,5 @@ async function handleIssueUpdatedEvent(json: Jira.IssueUpdatedPayload) {
 }
 
 function getIssueViewURL(issue: Jira.PartialIssue) {
-  return `${getJiraBaseURL(issue.self)}/browse/issue/${issue.key}`
+  return `${getJiraBaseURL(issue.self)}/browse/${issue.key}`
 }
