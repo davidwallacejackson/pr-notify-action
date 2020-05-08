@@ -83,6 +83,9 @@ export async function handleEvent(context: WebhookContext): Promise<void> {
     case 'issue_comment':
       messages = await handleIssueCommentEvent(context.payload)
       break
+    case 'commit_comment':
+      console.log(JSON.stringify({message: 'commit comment received', context}))
+      break
     default:
       console.log(`unhandled GitHub event: ${context.eventName}`)
   }
