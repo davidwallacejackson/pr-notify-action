@@ -23,7 +23,7 @@ export default async function sendMessages(messages: Message[]): Promise<void> {
     ).user as unknown) as SlackUser
 
     // special for john
-    if (slackUser.id === 'UFEFAQHJB') {
+    if (message.githubUsername?.toLowerCase() === 'xyzrr') {
       web.chat.postMessage({
         channel: 'C017GKF1FUY',
         text: message.body,
