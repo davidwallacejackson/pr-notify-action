@@ -22,11 +22,14 @@ export default async function sendMessages(messages: Message[]): Promise<void> {
       })
     ).user as unknown) as SlackUser
 
-    web.chat.postMessage({
-      channel: 'G016RBU1GMB',
-      text: message.body,
-      mrkdwn: true
-    })
+    // special for john
+    if (slackUser.id === 'UFEFAQHJB') {
+      web.chat.postMessage({
+        channel: 'C017GKF1FUY',
+        text: message.body,
+        mrkdwn: true
+      })
+    }
 
     return await web.chat.postMessage({
       channel: slackUser.id,
