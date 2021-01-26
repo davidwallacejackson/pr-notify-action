@@ -144,7 +144,7 @@ async function handleReviewEvent(
     return []
   }
 
-  let recipients = []
+  let recipients: GitHub.User[] = []
   let actionText: string
 
   switch (payload.review.state) {
@@ -160,7 +160,12 @@ async function handleReviewEvent(
       break
     case 'commented':
       actionText = 'commented on'
-      recipients = await getInvolvedUsers(pr)
+
+      // individual comments trigger one of these with an empty body,
+      // resulting in redundant messages
+      if (!!payload.review.body) {
+        recipients = await getInvolvedUsers(pr)
+      }
   }
 
   // never send a review notification to the author of the review
