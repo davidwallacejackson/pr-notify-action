@@ -10,3 +10,4 @@ Requires two parameters:
 
 * users (JSON mapping github usernames to slack emails)
 * slackToken
+
