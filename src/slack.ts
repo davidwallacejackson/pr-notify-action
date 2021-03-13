@@ -14,6 +14,7 @@ export default async function sendMessages(messages: Message[]): Promise<void> {
       : users[message.githubUsername as string]
 
     if (!userEmail) {
+      log.error(`User ${message.githubUsername} not registered with bot`)
       return null
     }
 
