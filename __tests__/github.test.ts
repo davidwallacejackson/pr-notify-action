@@ -57,6 +57,9 @@ const mockGitHubCalls = () => {
     .reply(200, fakeCommentsOrReviews)
 }
 
+// comment to see full logs in tests; kinda noisy
+process.env['PR_NOTIFY_DISABLE_LOGGING'] = 'true'
+
 beforeEach(() => {
   sendMessagesFake.resetHistory()
 })

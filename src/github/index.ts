@@ -7,6 +7,7 @@ import {link} from '../util'
 import getConfig from '../config'
 import {getInvolvedUsers, getIssuePullRequest} from './api'
 import sendMessages from '../slack'
+import * as log from '../log'
 
 async function verify(req: Request) {
   const {secret} = await getConfig()
@@ -41,11 +42,11 @@ export default async function handleGitHubWebhook(
   res: Response
 ): Promise<void> {
   try {
-    console.log('verifying...')
+    log.debug('verifying...')
     await verify(req)
-    console.log('verified')
+    log.debug('verified')
   } catch {
-    console.error('invalid request')
+    log.error('invalid request')
     res.status(400).send('invalid')
     return
   }
@@ -60,14 +61,14 @@ export default async function handleGitHubWebhook(
     await handleEvent(context)
     res.send('ok')
   } catch (error) {
-    console.error('server error: ', error.toString())
+    log.error(`server error: ${error.toString()}`)
     res.status(500).send('not ok')
   }
 }
 
 export async function handleEvent(context: WebhookContext): Promise<void> {
-  console.log('handling event: ', context.eventName)
-  console.log(JSON.stringify(context))
+  log.info(`handling event: ${context.eventName}`)
+  log.debug(context)
   let messages: Message[] = []
 
   switch (context.eventName) {
@@ -84,15 +85,14 @@ export async function handleEvent(context: WebhookContext): Promise<void> {
       messages = await handleIssueCommentEvent(context.payload)
       break
     case 'commit_comment':
-      console.log(JSON.stringify({message: 'commit comment received', context}))
+      log.info('commit comment received')
       break
     default:
-      console.log(`unhandled GitHub event: ${context.eventName}`)
+      log.info(`unhandled GitHub event: ${context.eventName}`)
   }
 
   if (messages.length > 0) {
-    console.log('sending messages')
-    console.log(JSON.stringify(messages))
+    log.info({sendingMessages: messages})
     await sendMessages(messages)
   }
 }
@@ -127,7 +127,7 @@ async function handlePREvent(
 async function handleReviewEvent(
   payload: GitHub.ReviewPayload
 ): Promise<Message[]> {
-  console.log('handling review')
+  log.info('handling review')
   if (payload.action !== 'submitted') {
     return []
   }
@@ -138,7 +138,7 @@ async function handleReviewEvent(
   const {blacklist} = await getConfig()
 
   if (blacklist.includes(review.user.login)) {
-    console.log(
+    log.info(
       `${review.user.login} is blacklisted -- not sending a notification`
     )
     return []
@@ -191,7 +191,7 @@ async function handleReviewEvent(
 async function handlePullRequestReviewCommentEvent(
   payload: GitHub.PullRequestReviewCommentPayload
 ): Promise<Message[]> {
-  console.log('handling comment')
+  log.info('handling comment')
   if (payload.action !== 'created') {
     return []
   }
@@ -204,7 +204,7 @@ async function handlePullRequestReviewCommentEvent(
   const {blacklist} = await getConfig()
 
   if (blacklist.includes(comment.user.login)) {
-    console.log(
+    log.info(
       `${comment.user.login} is blacklisted -- not sending a notification`
     )
     return []
@@ -214,7 +214,6 @@ async function handlePullRequestReviewCommentEvent(
     user => user.login !== comment.user.login
   )
 
-  console.log('recipients: ', recipients)
   return recipients.map(user => ({
     githubUsername: user.login,
     email: null,
@@ -228,7 +227,7 @@ async function handlePullRequestReviewCommentEvent(
 async function handleIssueCommentEvent(
   payload: GitHub.IssueCommentPayload
 ): Promise<Message[]> {
-  console.log('handling comment')
+  log.info('handling comment')
   if (payload.action !== 'created') {
     return []
   }
@@ -247,7 +246,7 @@ async function handleIssueCommentEvent(
   const {blacklist} = await getConfig()
 
   if (blacklist.includes(comment.user.login)) {
-    console.log(
+    log.info(
       `${comment.user.login} is blacklisted -- not sending a notification`
     )
     return []
@@ -257,7 +256,6 @@ async function handleIssueCommentEvent(
     user => user.login !== comment.user.login
   )
 
-  console.log('recipients: ', recipients)
   return recipients.map(user => ({
     githubUsername: user.login,
     email: null,

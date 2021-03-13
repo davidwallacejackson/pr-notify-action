@@ -2,6 +2,7 @@ import {WebClient} from '@slack/web-api'
 
 import {Message, SlackUser} from './types'
 import getConfig from './config'
+import * as log from './log'
 
 export default async function sendMessages(messages: Message[]): Promise<void> {
   const {users, slackToken} = await getConfig()
@@ -31,6 +32,10 @@ export default async function sendMessages(messages: Message[]): Promise<void> {
       })
     }
 
+    log.debug({
+      sendingToSlackID: slackUser.id,
+      message: message.body
+    })
     return await web.chat.postMessage({
       channel: slackUser.id,
       text: message.body,
